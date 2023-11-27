@@ -97,7 +97,7 @@ next.gen <- function(popx, n.offspring = 4){
   
 }
 
-the.survivors <- function(nextGen, phase = 'I', max.N =500){
+the.survivors <- function(nextGen, max.N =500){
   # survival 
    N <- nInd(nextGen)
    if(N>max.N) nextGen <- nextGen[sample(1:N, max.N),]
