@@ -108,7 +108,7 @@ conditions <- data.frame(gen = 1:10,
 head(conditions)
 mat
 
-
+em.simulate <- function(zero, mat, conditions){
 sim <- list()
 gen <- zero#sim[[11]]
 
@@ -137,6 +137,10 @@ for(i in 1:nrow(conditions)){
 }
 })
 
+return(sim)
+}
+
+em.simulate(zero, mat, conditions[1:3,])
 # fst ---------
 sapply(sim, nInd)/nPop(zero)
 

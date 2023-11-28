@@ -17,7 +17,7 @@ em.gl.join <- function(x1, x2){
 }
 
 # simulate generation zero 
-gen.zero <- function(pstart, site, n.offspring = 4){
+gen.zero.offspring <- function(pstart, site, n.offspring = 4){
   dads <- gl.keep.pop(pstart, as.pop = "sex", pop.list = "m")
   mums <- gl.keep.pop(pstart, as.pop = "sex", pop.list = "f")
   p <- gl.sim.offspring(fathers = dads, mothers = mums, 
@@ -25,6 +25,17 @@ gen.zero <- function(pstart, site, n.offspring = 4){
   n.ind <- nInd(p)
   p@pop <- factor(rep(site, n.ind))
   indNames(p) <- paste0(p@pop, "_", 1:n.ind)
+  p@other$ind.metrics <- em.gl.indmetrics(p)
+  return(p)
+}
+
+# simulate generation zero 
+gen.zero.alf <- function(pstart, site, Nsize = 100 ){
+  p <- gl.sim.ind(pstart, n = Nsize, popname = site)
+  n.ind <- nInd(p)
+  p@pop <- factor(rep(site, n.ind))
+  indNames(p) <- paste0(p@pop, "_", 1:n.ind)
+  p@other$sex <- sample(c('male', 'female'), n.ind, replace=T)
   p@other$ind.metrics <- em.gl.indmetrics(p)
   return(p)
 }
@@ -111,4 +122,37 @@ em.gl.join <- function(x1, x2){
   x <- rbind(x1, x2)
   x@other$ind.metrics <- rbind(x1@other$ind.metrics, x2@other$ind.metrics)
   return(x)
+}
+
+# big simulation -------------
+em.simulate <- function(zero, mat, conditions){
+  sim <- list()
+  gen <- zero#sim[[11]]
+  
+  system.time({
+    for(i in 1:nrow(conditions)){
+      # setup
+      icon <- conditions[i,]
+      m.ind <- icon$migration
+      max.N <- icon$N 
+      pha <- icon$phase
+      off <- icon$offspring
+      
+      # mice dynamics
+      gen <- gene.flow(gen, mat, m.ind)
+      pops <- seppop(gen)
+      genRepro <- lapply(pops, next.gen, n.offspring = off)
+      genSurvive <- lapply(genRepro, the.survivors, max.N = max.N)
+      gen <- reduce(genSurvive, em.gl.join)
+      gen@other$ind.metrics$iteration <- i
+      gen@other$ind.metrics$nInd <- nInd(gen)
+      gen@other$ind.metrics <- cbind(gen@other$ind.metrics, icon)
+      sim[[i]] <- gen
+      txt <- paste("  Generation:", i, pha)
+      cat(paste0("\033[0;", 36, "m", txt,"\033[0m","\n"))
+      
+    }
+  })
+  
+  return(sim)
 }
