@@ -25,9 +25,9 @@ pop(ph2) <- ph2@other$ind.metrics$gridId
 glBase <- gl.keep.pop(ph2, pop.list = gridsKeep)
 glBaseMaf <- gl.filter.maf(glBase, threshold = 0.1)
 
-system.time(fstrealmaf <- gl.fst.pop(glBaseMaf, nboots = 1))
-mean(fstrealmaf, na.rm = T)
-median(fstrealmaf, na.rm = T)
+# system.time(fstrealmaf <- gl.fst.pop(glBaseMaf, nboots = 1))
+# mean(fstrealmaf, na.rm = T)
+# median(fstrealmaf, na.rm = T)
 
 popsReal <- seppop(glBaseMaf)
 
@@ -42,37 +42,78 @@ mat[mat != 0] <- 1/(nrow(mat)-1) # equal dispersal
 
 colSums(mat)
 nrow(mat)
-mat
+mat[1:5, 1:5]
 
 # step 3: simulate alf ---------
 popSim <- pblapply(popsReal, function(x) gl.sim.ind(x, n = 100, x@pop[1]))
 
 popSim <- lapply(popSim, fxsex)
 
-popSim$CS2@other$ind.metrics <- lapply(popSim, em.gl.indmetrics)
+
 simStart <- reduce(popSim, em.gl.join)
 
-system.time(fststart <- gl.fst.pop(simStart, nboots = 1))
-mean(fststart, na.rm = T)
-median(fststart, na.rm = T)
+# system.time(fststart <- gl.fst.pop(simStart, nboots = 1))
+# mean(fststart, na.rm = T)
+# median(fststart, na.rm = T)
 
 # step 4: initalise simulation ---------
 
 ne <- nInd(popSim$FRN1)
 fst <- 0.017
-m <- round((1/fst-1)/(4*(ne)), 2)
+mEqu <- ceiling((1/fst-1)/(4*(ne))*100)/100 # at equalibrium
+m <- mEqu#*2 
 
-initialise_conditions <- data.frame(gen = 1:5, 
+initialise_conditions <- data.frame(gen = 1:10, 
                                     migration = m, N = ne, 
                                     phase = 'I', offspring = 4,
                                     npop = nPop(simStart)) %>% 
   mutate(leaving = N*migration, Nm = leaving/(npop-1))
 
+initialise_conditions$migration[1] <- 0.615
+
 initialiseSim <- em.simulate(simStart, mat,initialise_conditions)
 
+sapply(initialiseSim, nPop)
+sapply(initialiseSim, nInd)
 
+fstinit <- pblapply(initialiseSim, gl.fst.pop, nboots = 1)
+
+data.frame(fst = sapply(fstinit, mean, na.rm = T),
+           gen = 1:length(fstinit)) %>% 
+  ggplot(aes(gen, fst))+
+  geom_hline(yintercept = fst, colour = 'grey', lty = 2)+
+  geom_point(size =4)+
+  theme_classic()
+
+fstinit[[4]] %>% mean(., na.rm = T)
 # step 5: define simulation conditions ---------
+phaseNo <- paste0(rep(c('I', 'D', 'L'), 3), rep(1:3, each = 3))[-9]
 
+phaselength <- c(2, 2, 2, 4, 2, 4, 2, 2)
+
+conditions <- data.frame(gen = 1:sum(phaselength), period = rep(1:8, phaselength),
+                         phaseNo = rep(phaseNo[-1], phaselength), 
+                         grids = sample(4:10, sum(phaselength), replace = T)
+) %>% 
+  mutate(phase = str_sub(phaseNo, 1,1),
+         rep = str_sub(phaseNo, 2,2),
+         grids = ifelse(phase == 'I', grids + 10, grids),
+         grids = ifelse(phase == 'D', grids + 3, grids),
+         migration = ifelse(phase == 'I', 0.25, 0),
+         N = case_when(
+           phase == 'L' ~ 25,
+           phase == 'I' ~ 250,
+           phase == 'D' ~ 250/2,
+         ),
+         N = ifelse(phase == 'D' & duplicated(phaseNo), 250/4, N),
+         N = ceiling(N),
+         offspring = 4) %>% 
+  mutate(rep = ifelse(phaseNo == 'L3', 2, rep),
+         rep = ifelse(phaseNo == 'L2', 1, rep),
+         genx = c(1:6, 1:10, 1:4),
+         years = c(1,1.25,2,2.2,3,4,
+                   1.1,1.2,1.3,1.4, 2, 2.2, 3,4,5,6,
+                   1,1.2,2,2.2))
 
 
 
