@@ -9,6 +9,16 @@ em.gl.indmetrics <- function(glsim, gen = 0, disp.rate = 0) {
   return(glsim@other$ind.metrics)
 }  
 
+# add sex if missing
+fxsex <- function(x){
+  x@other$sex <- sample(c('male', 'female'), nInd(x), replace = T)
+  
+  x@other$ind.metrics <- em.gl.indmetrics(x)
+  x@other$ind.metrics$id <- paste0(x@other$ind.metrics$pop, '_', 
+                                   x@other$ind.metrics$id)
+  return(x)
+}
+
 # join two genlight objects and their ind.metric data
 em.gl.join <- function(x1, x2){
   x <- rbind(x1, x2)

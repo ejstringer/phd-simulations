@@ -1,5 +1,7 @@
 
-# setup 
+# setup --------
+source('code/libraries.R')
+source('code/functions_simulate_geneflow.R')
 
 # what we know: low pop size = 25* with migration rate 0
 #               2007 had an increase rate of ~4.17, round to 4*
@@ -9,7 +11,7 @@
 #               geneartion time every year during busts (low)
 #               migration = 0 during decreases and lows
 
-# step 1: data 
+# step 1: data -----------
 ph <- readRDS('../phd-analysis2/output/Pseudomys_hermannsburgensis_filtered_genotypes.rds')
 ph2 <- gl.keep.pop(ph, as.pop = 'trip', pop.list = '2007-09-01')
 
@@ -28,17 +30,53 @@ mean(fstrealmaf, na.rm = T)
 median(fstrealmaf, na.rm = T)
 
 popsReal <- seppop(glBaseMaf)
-# step 2: simulate alf
+
+# step 2: define site gene flow probabilities ----------
+xy <- matrix(nrow = length(gridsKeep),
+             ncol = 2,
+             data = 1:(length(gridsKeep)*2))
+rownames(xy) <- gridsKeep
+
+mat <- as.matrix(dist(xy))
+mat[mat != 0] <- 1/(nrow(mat)-1) # equal dispersal
+
+colSums(mat)
+nrow(mat)
+mat
+
+# step 3: simulate alf ---------
 popSim <- pblapply(popsReal, function(x) gl.sim.ind(x, n = 100, x@pop[1]))
-#names(popSim) <- names(popsReal)
 
-# step 3: define site gene flow probabilities
+popSim <- lapply(popSim, fxsex)
 
-# step 4: initalise simulation
+popSim$CS2@other$ind.metrics <- lapply(popSim, em.gl.indmetrics)
+simStart <- reduce(popSim, em.gl.join)
 
-# step 5: define simulation conditions 
+system.time(fststart <- gl.fst.pop(simStart, nboots = 1))
+mean(fststart, na.rm = T)
+median(fststart, na.rm = T)
 
-# step 6: run simulation
+# step 4: initalise simulation ---------
 
-# step 7: Fsts
+ne <- nInd(popSim$FRN1)
+fst <- 0.017
+m <- round((1/fst-1)/(4*(ne)), 2)
+
+initialise_conditions <- data.frame(gen = 1:5, 
+                                    migration = m, N = ne, 
+                                    phase = 'I', offspring = 4,
+                                    npop = nPop(simStart)) %>% 
+  mutate(leaving = N*migration, Nm = leaving/(npop-1))
+
+initialiseSim <- em.simulate(simStart, mat,initialise_conditions)
+
+
+# step 5: define simulation conditions ---------
+
+
+
+
+# step 6: run simulation ----------
+
+# step 7: Fsts ---------
 
