@@ -40,6 +40,26 @@ gen.zero.alf <- function(pstart, site, Nsize = 100 ){
   return(p)
 }
 
+
+em.gl.sim.ind <- function (x, n = 250, popname = NULL) 
+{
+  p <- as.matrix(x)
+  nind <- nInd(x)
+  nx <- round(n/nind) # could change this where nx is what you use, eg nx = 10;
+                      #                                          n=4>40 n=10>100
+  
+  simind <- p
+  for(i in 1:(nx-1)){
+  new <- apply(p, MARGIN = 2, function(x) sample(x, nind, replace = F))
+  rownames(new) <- paste0(rownames(p),'_sim', i)
+  simind <- rbind(simind, new)
+  }
+  glsim <- new("genlight", gen = simind, ploidy = 2, 
+               ind.names = rownames(simind), loc.names = locNames(x), loc.all = x@loc.all, 
+               position = position(x), pop = rep(popname, nrow(simind)))
+  return(glsim)
+}
+
 # gene flow --------------------------------------------------------------------
 
 gene.flow <- function(gl, probMatrix, mRate){
