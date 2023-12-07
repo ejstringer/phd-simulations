@@ -11,7 +11,9 @@ source('./code/functions_simulate_geneflow.R')
 #               generation time every 3months during booms (increase decrease)
 #               geneartion time every year during busts (low)
 #               migration = 0 during decreases and lows
-
+phaseCol <- c(L = terrain.colors(10)[7],
+              I = terrain.colors(10)[1],
+              D = terrain.colors(10)[4])
 # step 1: data -----------
 ph <- readRDS('./output/pherm_filtered_genotypes_phases.rds')
 
@@ -31,6 +33,7 @@ glBase <- gl.filter.monomorphs(glBase)
 
 gl.report.monomorphs(glBase)
 
+glBase <- glBase[,1:1000]
 popsReal <- seppop(glBase)
 
 # step 2: define site gene flow probabilities ----------
@@ -94,7 +97,7 @@ mEqu <- (1/fst-1)/(4*(ne)) # at equilibrium
 m <- ceiling(mEqu*100)/100 # round up 
 
 initialise_conditions <- data.frame(gen = 1, 
-                                    migration = 0.6, N = ne, 
+                                    migration = 0.61, N = ne, 
                                     phase = 'I', offspring = 4,
                                     npop = nPop(simStart)) %>% 
   mutate(leaving = N*migration, Nm = leaving/(npop-1))
@@ -106,7 +109,8 @@ fstinit <- pblapply(initialiseSim, function(x) gl.fst.pop(x[[1]], nboots = 1))
 
 data.frame(fst = sapply(fstinit, mean, na.rm = T),
            gen = 1:length(fstinit)) %>% 
-  mutate(min = ifelse(min(fst)==fst, 'Select', ''),
+  mutate(f17 = abs(fst - 0.017),
+           min = ifelse(min(f17)==f17, 'Select', ''),
          grp = 'cool') %>% 
   ggplot(aes(gen, fst, colour = min, group = grp))+
  # geom_hline(yintercept = 0.03, colour = 'orange', lty = 2)+
@@ -117,7 +121,7 @@ data.frame(fst = sapply(fstinit, mean, na.rm = T),
 saveRDS(initialiseSim, './output/intial_sim.rds')
 saveRDS(fstinit, './output/intial_sim_fst.rds')
 
-nSel <- 4
+nSel <- 7
 fstinit[[nSel]] %>% mean(., na.rm = T)
 alfselected <- gl.alf(initialiseSim[[nSel]][[1]])
 
@@ -134,7 +138,7 @@ hist(alfreal$minAlf, breaks = 20)
 alfsim$type <- 'sim'
 alfreal$type <- 'real'
 alfselected$type <- 'selected'
-hist(alfreal$minAlf - alfselected$minAlf)
+hist(alfreal$alf2 - alfselected$alf2)
 
 rbind(alfreal, alfselected) %>%
   #rbind(alfsim) %>% 
@@ -143,6 +147,7 @@ rbind(alfreal, alfselected) %>%
   #geom_freqpoly(bins = 40, lwd = 2)+
   theme_classic()
 
+# Conditions 1 -----------------
 # step 5: define simulation conditions ---------
 phaseNo <- paste0(rep(c('I', 'D', 'L'), 3), rep(1:3, each = 3))[-9]
 
@@ -356,14 +361,27 @@ ggplot(conditions2, aes(year, fst, colour = phase))+
 
 # Conditions 3 --------------
 
+npp <- read.csv('../phd-analysis2/output/npp_means.csv')
 
+npp$phaseNo <- c('L', paste0(rep(c('I', 'D', 'L'), 3), rep(1:3, each = 3)))[-10]
 em.mRate(0.03, 25)
 em.mRate(0.034, 25)
 sapply(c,)
 em.mRate(0.01, 100)
-em.mRate(0.005, 250)
+em.mRate(0.005, 60)
 
-em.mRate(0.01, 50)
+npp$mStart <- 0.15
+npp$mCorrect <- log(npp$npp)/log(npp$npp)[2]
+
+npp$m <- npp$mStart* npp$mCorrect
+mPhase <- c(L = em.mRate(mean(c(0.027,0.02)), 25), # low
+            D = em.mRate(mean(c(0.034,0.03,0.012)), 25)/2, # decrease
+            I = em.mRate(mean(c(0.01, 0.005, 0.017)), 50))# increase
+# remove "outliers"
+mPhase <- c(L = em.mRate(mean(c(0.032,0.027)), 25), # low
+            D = em.mRate(mean(c(0.034,0.03)), 25), # decrease
+            I = em.mRate(mean(c(0.01,0.017)), 50))# increase
+mPhase
 em.mRate(0.026, 25)
 
 ## step 5: define simulation conditions ---------
@@ -387,15 +405,17 @@ conditions2 <- data.frame(gen = 1:sum(phaselength),
   mutate(phase = str_sub(phaseNo, 1,1),
          rep = str_sub(phaseNo, 2,2),
          Ne = case_when(
-           phase == 'L' ~ 30,
-           phase == 'I' ~ 120,
-           phase == 'D' ~ 30,
+           phase == 'L' ~ 25,
+           phase == 'I' ~ 100,
+           phase == 'D' ~ 25,
          ),
-         Ne = ifelse(phaseNo == 'I2', 300, Ne),
+         Ne = ifelse(phaseNo == 'I2', 250, Ne),
          N = Ne,
         # N = ifelse(phase == 'D' & duplicated(phaseNo), 100/4, Ne),
         # N = ceiling(N),
-         offspring = 4)
+         offspring = 4,
+        migration = rep(rep(rev(mPhase),3)[-9], phaselength),
+        migration = round(migration, 4))
 
 for(i in 2:nrow(conditions2)){
   x <- ifelse(conditions2$phase[i] == 'L', 1, 0.5)
@@ -408,12 +428,13 @@ conditions2 <- conditions2 %>%
     rep == '1' ~ year - 0,
     rep == '2' ~ year - 3.5,
     rep == '3' ~ year - 10.5,
-  ),
-  migration = em.mRate(fstch2, Ne))
+  ))
 
-conditions2$migration <- rep(c(0.15, 0.05, 0.37, 0.5,0.3, 0.37, 0.5, 0.1), phaselength)
-conditions2
+#conditions2$migration <- rep(c(0.15, 0.05, 0.37, 0.5,0.3, 0.37, 0.5, 0.1), phaselength)
+#conditions2$migration[1] <- 0.15
+conditions2$migration <- rep(npp$m[-1], phaselength)
 
+conditions2$migration <- rep(c(0.15, 0.09, 0.42, 0.66,0.3, 0.42, 0.66, 0.09), phaselength)
 
 ## step 6: run simulation ----------
 fstinit[[nSel]] %>% mean(., na.rm = T)
@@ -454,10 +475,25 @@ conditions2$fstphase <- rep(sapply(simfstphase, mean, na.rm = T), phaselength)
 conditions2$phaseNo <- factor(conditions2$phaseNo, levels = phaseNo)
 ## step 8: plot --------
 
-ggplot(conditions2, aes(gen, fst, colour = phase))+
-  geom_point()+
-  geom_point(aes(y = fstch2), colour = 'grey')+
+ggplot(conditions2, aes(gen, fst, colour = phase, fill = phase))+
+  geom_line(aes(group = replace), size = 1)+
+  geom_point(size = 3, pch = 21, colour = 'black')+
+#  geom_point(aes(y = fstch2), colour = 'grey60', alpha = 0.5)+
   theme_classic()+
+  geom_hline(yintercept = 0.017, colour = 'grey', lty = 2)+
+  geom_hline(yintercept = 0.03, colour = 'grey', lty = 2)+
+  geom_hline(yintercept = 0.005, colour = 'grey', lty = 2)+
+  theme(legend.position = 'none')+
+  scale_fill_manual(values = phaseCol)+
+  scale_color_manual(values = phaseCol)+
+  xlab('generation') +
+
+ggplot(conditions2, aes(phaseNo, fstphase, colour = phase))+
+  scale_color_manual(values = phaseCol)+
+  geom_point(size = 3)+
+  geom_point(aes(y = fstch2),size = 3, colour = 'grey40', alpha = 0.5)+
+  theme_classic()+
+  xlab('population phase #') +
   geom_hline(yintercept = 0.017, colour = 'grey', lty = 2)+
   geom_hline(yintercept = 0.03, colour = 'grey', lty = 2)+
   geom_hline(yintercept = 0.005, colour = 'grey', lty = 2)
