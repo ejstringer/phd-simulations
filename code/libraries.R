@@ -1,8 +1,8 @@
 
 # load libraries ---------------------------------------------------------------
-library(tidyverse)
-library(lubridate)
-library(dartR)
+library(tidyverse, lib.loc = .libPaths()[2])
+library(lubridate, lib.loc = .libPaths()[2])
+library(dartR, lib.loc = .libPaths()[2])
 
 library(lme4)
 library(lmerTest)
@@ -18,9 +18,9 @@ library(grid)
 library(png)
 library(jpeg)
 
-library(sf)
-library(raster)
-library(ggspatial)
+# library(sf)
+# library(raster)
+# library(ggspatial)
 
 library(otuSummary)
 library(pbapply)
