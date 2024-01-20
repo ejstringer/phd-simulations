@@ -177,7 +177,7 @@ yleft <- textGrob(expression('Model | '* italic('β'[2]) *' |'),
 
 slopeFig <- grid.arrange(g5, g4)
 
-ggsave('/home/stringer2/simulations/fig5_model_slopes_npp.png',
+ggsave('./figures/fig5_model_slopes_npp.png',
        slopeFig, units = 'cm', height = 14, width = 18, dpi = 300)
 
 sum(models_nSim[[1]]$pvalue < 0.05, na.rm = T)
@@ -356,7 +356,7 @@ ggplot(aes(phaseNo, alf, colour = phase, group = loci)) +
         strip.text = element_blank())+
   ylab('Allele Frequency')+
   xlab('Population phase #') -> g6
-ggsave('/home/stringer2/simulations/fig6_alf_change_real_1.png', g6,
+ggsave('./figures/fig6_alf_change_real_1.png', g6,
        units = 'cm', height = 8, width = 16, dpi = 300)
 
 ## g8 lm ----
@@ -417,7 +417,7 @@ filter(dfplot, phase != 'decrease2',
 
 g8g6 <- grid.arrange(g8, g6+theme(legend.position = 'none'), ncol =1)
 
-ggsave('/home/stringer2/simulations/fig6_alf_change_real_2.png',g8g6,
+ggsave('./figures/fig6_alf_change_real_2.png',g8g6,
        units = 'cm', height = 14, width = 12, dpi = 300)
 ## g7 -----
 filter(dfplot, phase != 'decrease') %>% 
@@ -462,7 +462,7 @@ alfchangeFig <- grid.arrange(g6 +theme(legend.position = 'none',
                        ),
              widths = c(2,2))
 
-ggsave('/home/stringer2/simulations/fig6_alf_change_real.png',
+ggsave('./figures/fig6_alf_change_real.png',
        alfchangeFig, units = 'cm', height = 8, width = 18, dpi = 300)
 
        

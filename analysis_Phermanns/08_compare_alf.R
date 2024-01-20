@@ -1,14 +1,14 @@
 
-phases <- read.csv('../rain_caps_phases.csv')
-ph <- readRDS('../pherm_filtered_genotypes_phases.rds')
+phases <- readRDS('./output/phase_df.rds')
+ph <- readRDS('./output/pherm_filtered_genotypes_phases.rds')
 #ph@other$ind.metrics$trip <- ymd(ph@other$ind.metrics$trip)
-ph@other$ind.metrics<- ph@other$ind.metrics %>% left_join(phases)
+#ph@other$ind.metrics<- ph@other$ind.metrics %>% left_join(phases)
 
 ph@other$ind.metrics$phaseNo <- factor(ph@other$ind.metrics$phaseNo,
                                        levels = paste0(rep(c('L', 'I', 'D'), 3),
                                                        rep(1:3, each = 3)))
 
-npp <- read.csv('../npp_means.csv')
+npp <- read.csv('./output/dataframes/npp_means.csv')
 npp
 
 ph@other$ind.metrics <- ph@other$ind.metrics %>% left_join(npp)
@@ -264,7 +264,7 @@ df_sum_meanchage %>%
         axis.title.y = element_text(size = 11)) +
   ylab('Sum of Change in Allele Frequency') -> fig_sumMeans; fig_sumMeans
  
-ggsave('/home/stringer2/simulations/fig4c_alf_meandiff__sum.png',
+ggsave('./figures/fig4c_alf_meandiff__sum.png',
        fig_sumMeans, units = 'cm', height = 8, width = 16, dpi = 300)
 
 sum(df_sum_meanchage[df_sum_meanchage$type == 'nSim' & df_sum_meanchage$name == 'Mean',]$value > 0.00223)

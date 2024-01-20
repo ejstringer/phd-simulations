@@ -81,7 +81,7 @@ ggplot(aes(phaseNo, value, colour = name))+
   xlab('population phase #') -> figb;figb
 
 figab<- grid.arrange(figa, figb, ncol = 1)  
-ggsave('/home/stringer2/simulations/fig3_fst_simulations2.png',
+ggsave('./figures/fig3_fst_simulations2.png',
        figab, units = 'cm', height = 20, width = 16, dpi = 300)
 
 
@@ -136,4 +136,4 @@ conditionsTB %>%
   mutate(fst = ifelse(duplicated(phaseNo), NA, fst),
          CIL = ifelse(duplicated(phaseNo), NA, CIL),
          CIU = ifelse(duplicated(phaseNo), NA, CIU))
-write.csv(conditionsTB, '../conditon_flextable.csv', row.names = F) 
+write.csv(conditionsTB, './output/dataframes/ph_sim_conditons.csv', row.names = F) 

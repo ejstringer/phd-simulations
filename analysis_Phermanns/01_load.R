@@ -1,8 +1,8 @@
 #load file
-
-source('/home/stringer2/simulations/libraries.R')
-source('/home/stringer2/simulations/functions_simulate_geneflow.R')
-ph <- readRDS('/home/stringer2/simulations/pherm_filtered_genotypes_phases.rds')
+getwd()
+source('./code/libraries_dungog.R')
+source('./code/functions_simulate_geneflow.R')
+ph <- readRDS('./output/pherm_filtered_genotypes_phases.rds')
 
 em.mRate <- function(fst, ne) (1/fst-1)/(4*ne)
 

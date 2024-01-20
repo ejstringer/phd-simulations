@@ -69,6 +69,6 @@ bind_rows(alfreal, alfselected) %>%
 
 initialisedSelected <- initialiseSim[[nSel]][[1]]
 saveRDS(initialisedSelected, 
-        '/home/stringer2/simulations/initialised_simulation_gen0.rds')
+        './output/initialised_simulation_gen0.rds')
 write.csv(initialise_conditions,
-          '/home/stringer2/simulations/initialise_conditions.csv', row.names = F)
+          './output/dataframes/initialise_conditions.csv', row.names = F)
