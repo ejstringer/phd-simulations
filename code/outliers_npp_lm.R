@@ -2,7 +2,7 @@
 source('./code/libraries.R')
 source('../phd-analysis2/code/functions_genetic-data-creation.R')
 library(fuzzySim)
-ph <- em.filtering('ph') 
+ph <- em.filtering('sy') 
 ph@other$ind.metrics$trip <- ymd(ph@other$ind.metrics$trip)
 ph@other$ind.metrics<- ph@other$ind.metrics %>% left_join(em.rain_caps_phase())
 
@@ -110,7 +110,8 @@ FDR(pvalues = my_pvalues)
 m.alfnpp <- lapply(alfloci, em.alf_npp_model) %>% 
   do.call('rbind', .)
 1210/24388
-m.alfnpp %>% filter(pvalue < 0.05/1000) %>% nrow
+
+m.alfnpp %>% filter(pvalue < 0.05) %>% nrow
 m.alfnpp$pvalue %>% hist
 m.alfnpp %>% filter(intercept > 0.1 , intercept < 0.9, pvalue < 0.001)
 
@@ -271,3 +272,52 @@ outs$uid[16:18]
   outsScaf <- topR2$loci[sapply(outs$uid[12:14], function(x) grep(x, topR2$loci))]
  outsScaf <- topR2$loci[sapply(outs$uid[16:18], function(x) grep(x, topR2$loci))]
   
+ 
+ 
+ # syoung --------
+ m.alfnpp$R2 %>% hist
+ topR2 <- m.alfnpp %>% filter(R2 > 0.7) %>% 
+   arrange(desc(R2))
+ topR2 %>% nrow
+ topR2 %>% 
+   ggplot(aes(pvalue, R2)) +
+   geom_point()+
+   theme_classic()
+ 
+ a1 <- filter(alfdf, loci %in% topR2$loci)
+ ggplot(a1, aes(npp, alf2, colour = loci, group = loci)) +
+   geom_smooth(method = 'lm', colour = 'grey50', se = T) +
+   geom_hline(yintercept = 0, colour = 'grey', lty = 2)+
+   geom_point(size = 2.5)+
+   scale_x_log10()+
+   #scale_colour_manual(values = phaseCol)+
+   theme_classic()+
+   theme(legend.position = 'bottom')+
+   
+   ggplot(a1, aes(phaseNo, alf2, colour = phase, group = loci)) +
+   #geom_smooth(method = 'lm', colour = 'grey50', se = T) +
+   geom_line()+
+   geom_hline(yintercept = 0, colour = 'grey', lty = 2)+
+   geom_point(aes(size = n))+
+   scale_colour_manual(values = phaseCol)+
+   theme_classic()+
+   theme(axis.title.y = element_blank())
+ 
+ lookout <- sub('-C/G', '',topR2$loci)#[-c(4,8,10)])
+ lookout <- sub('-T/A', '', lookout)
+ lookout <- sub('-G/A', '', lookout)
+
+ phsy@other$loc.metrics[phsy@other$loc.metrics$uid %in% lookout,c(1,24,5,6)]
+ 
+ ggplot(a1, aes(npp, alf2, colour = loci, group = loci)) +
+   geom_smooth(method = 'lm', colour = 'grey50', se = T) +
+   #geom_hline(yintercept = 0, colour = 'grey', lty = 2)+
+   geom_point(size = 2.5)+
+   scale_x_log10()+
+   facet_wrap(~loci, scale = 'free')+
+   #scale_colour_manual(values = phaseCol)+
+   theme_classic()+
+   theme(legend.position = 'bottom')
+
+ m.alfnpp$slope %>% hist 
+ 

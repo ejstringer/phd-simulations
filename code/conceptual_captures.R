@@ -189,6 +189,7 @@ em.conceptual_phase <- function(startdate = "2007-01-01",
     theme(axis.text.x = element_text(angle = 45, vjust = 0.5),
           # legend.position = c(0.11, 0.7),
           legend.position = 'bottom',
+          axis.text.y = element_text(margin = margin(l = 7.5, r = 2)),
           strip.background = element_blank(),
           strip.text = element_blank(),
           plot.margin = margin(0.01, 0.5, 0.01, 0.01, "cm")) +
@@ -202,7 +203,7 @@ em.conceptual_phase <- function(startdate = "2007-01-01",
 # load -----------
 
 #setwd('../phd-simulations/')
-#source('./code/libraries.R')
+source('./code/libraries.R')
 # source('./code/functions_conceptual.R')
 # source('./code/functions_genetic-data-creation.R')
 
@@ -214,61 +215,92 @@ phaseCol <- c(L = terrain.colors(10)[7],
               I = terrain.colors(10)[1],
               D = terrain.colors(10)[4])
 
-conditions  <- read.csv('../phd-simulations/output/conditions_fourth_sim.csv')
+conditions  <- read.csv('../phd-simulations/output/conditon_flextable.csv')
+conditions$year <- 0.5
+for(i in 2:nrow(conditions)){
+  x <- ifelse(conditions$phase[i] == 'L', 1, 0.5)
+  conditions$year[i] <- conditions$year[i-1] + x
+}
 
-initialise_conditions$gen <- 0
-initialise_conditions$year <- 0
-initialise_conditions$pops <- 24
-initialise_conditions$loci <- '24388'
-initialise_conditions$fst <- 0.01684324
-initialise_conditions$nInd <- 2400
-initialise_conditions$phaseNo <- 'I1'
 
-conditionsx <- bind_rows(conditions[1,],initialise_conditions[c(1:5,9:ncol(initialise_conditions))],
-                         conditions) %>% 
-  rename(Nmax = N)
+names(conditions)
+initialise_conditions <- data.frame(gen = 0, year = 0, fstgen = 0.01684324,
+                                    phase = 'initialise', phaseNo = 'int',
+                                    N = 100*48, Nmax = 100, migration = 0.62)
+
+
+
+conditionsx <- bind_rows(conditions[1,],initialise_conditions,
+                         conditions) 
+
 conditionsx <- conditionsx[-1,] 
-conditionsx$loci[2] <- '-'
+#conditionsx$loci[2] <- '-'
 # conditionsx$gen[1]<- 0
 # conditionsx$year[1]<- 0
-conditionsx$phase[1] <- 'initialise'
+#conditionsx$phase[1] <- 'initialise'
 
-simCaps <- ggplot(conditionsx, aes(year, nInd/100, fill = phase))+
+simCaps <- ggplot(conditionsx, aes(year, N/48, fill = phase))+
   geom_bar(stat = 'identity', alpha = 0.40) +
   theme_classic() +
   scale_x_continuous(breaks = conditionsx$year, labels = conditionsx$gen)+
   scale_fill_manual(values = c(phaseCol, initialise = 'grey60'),
                     name = 'Population Phase',
                     labels = c('Low', 'Increase', 'Decrease', 'Sim initialised'))+
-  theme(legend.position = 'bottom',
-        plot.margin = margin(0.01, 0.5, 0.01, 0.01, "cm"),
+  theme(legend.position = c(0.92,0.8),
+        legend.background = element_rect(colour = 'grey'),
+        plot.margin = margin(0.01, 1, 0.01, 0.01, "cm"),
+        axis.text.y = element_text(margin = margin(l = 0, r = 2)),
         axis.title.y = element_text(size = 12))+
   xlab('Generation')+
-  ylab(expression('N'[' / 100']))
+  ylab(expression(italic('N')[e]*' (per subpopulation)')); simCaps
 
 fig1 <- grid.arrange(con + labs(title = 'Sandy inland mouse captures')+ theme(legend.position = 'none',
                                  axis.title.y = element_text(size = 12)),
-                     simCaps+labs(title = 'Simulated N'), ncol = 1)
+                     simCaps+labs(title = expression('Simulated '*italic('N'))), ncol = 1)
 
 ggsave('./figures/fig1_captures_sim.png',fig1,  units = 'cm',
        height = 16, width = 16, dpi = 300)
 
 
-fx <- conditionsx[,-c(4,5, 6,7,8)] %>% 
+# from dungog ---------
+conditionstb <- conditionsx %>%  #read.csv('./output/conditon_flextable.csv') %>% 
+  left_join(data.frame(phaseNo = paste0(rep(c('L', 'I', 'D'), 3), rep(1:3, each = 3)),
+             realfst = c(0.032, 0.017, 0.034, 0.027, 0.005, 0.012, 0.02, 0.01, 0.03)))
+fx <-conditionstb %>% 
+  dplyr::select(gen, phaseNo, phase, Nmax, migration, realfst, N, fstgen, fst) %>% 
+  mutate(fst = ifelse(duplicated(phaseNo), NA, fst),
+         realfst= ifelse(duplicated(phaseNo), NA, realfst),
+         #CIL = ifelse(duplicated(phaseNo), NA, CIL),
+         #CIU = ifelse(duplicated(phaseNo), NA, CIU)
+         phase = case_when(
+           phase == 'initialise' ~  'initialise',
+           phase == 'L' ~ 'low',
+           phase == 'I' ~ 'increase',
+           phase == 'D' ~ 'decrease'
+         ),
+         phase = ifelse(duplicated(phaseNo), NA, phase),
+         Nmax = ifelse(duplicated(phaseNo), NA, Nmax),
+         migration = ifelse(duplicated(phaseNo), NA, migration),
+         ) %>% 
   mutate_if(is.numeric, round, digits = 4) %>% 
+  mutate(N = round(N/48)) %>% 
+  dplyr::select(-phaseNo) %>% 
+  relocate(realfst, .before = N) %>% 
   flextable() %>% 
   autofit() %>% 
-  align(j = 5, align = 'center') %>% 
-  bold(part = 'header') %>% 
-  bold(j = 7, i = 2:20) %>% 
-  italic(j = 8) %>% 
-  bg(j = 1:5, i = which(conditionsx$phase == 'L'), bg = muted(phaseCol[1], c = 40, l = 90)) %>% 
-  bg(j = 1:5, i = which(conditionsx$phase == 'I'), bg = muted(phaseCol[2], c = 40, l = 90)) %>% 
-  bg(j = 1:5, i = which(conditionsx$phase == 'D'), bg = muted(phaseCol[3], c = 40, l = 90))
+  align(j = 4, align = 'center') %>% 
+  italic(part = 'header', j = 6:8) %>% 
+  bold(j = c(7,8), i = 1:19) %>% 
+  italic(j =5) %>% 
+  hline(i = (which(!duplicated(conditionstb$phaseNo))-1)[-1], border = fp_border(color = "grey80",
+                                                            width = 1, style = "dashed")) %>% 
+  bg(j = 1:5, i = which(conditionstb$phase == 'L'), bg = muted(phaseCol[1], c = 40, l = 90)) %>% 
+  bg(j = 1:5, i = which(conditionstb$phase == 'I'), bg = muted(phaseCol[2], c = 40, l = 90)) %>% 
+  bg(j = 1:5, i = which(conditionstb$phase == 'D'), bg = muted(phaseCol[3], c = 40, l = 90))
 
 fx
 fx2 <- data.frame(name= c('pops:', 'offspring:', 'loci:', ''),
-                  value = c(24,4,24388, NA)) %>% 
+                  value = c(48,4,24388, NA)) %>% 
   flextable() %>% 
   autofit() %>% 
   delete_part() %>% 
@@ -277,7 +309,10 @@ fx2 <- data.frame(name= c('pops:', 'offspring:', 'loci:', ''),
   align(j = 1, align = 'right') %>% 
   align(j = 2, align = 'left') %>% 
   bg(i = 1:3, j = 2, bg = 'grey90')
-  
+
 fx2
 
-flextable::save_as_docx(fx2, fx, path = './figures/generation_parameters.docx')
+flextable::save_as_docx(fx2, fx, path = './figures/generation_parameters_pop48.docx')
+
+
+
