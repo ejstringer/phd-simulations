@@ -1,5 +1,6 @@
 ## data creastion -------
 source('./code/functions_genetic-data-creation.R')
+source('./code/libraries.R')
 
 ph <- em.filtering('ph')
 sy <- em.filtering('sy')

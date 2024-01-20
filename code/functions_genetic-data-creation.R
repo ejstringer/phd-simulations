@@ -125,7 +125,7 @@ em.filtering <- function(species = 'ph') {
   
   filterfile <- paste0("./output/", glx@other$ind.metrics$species[1], 
                        ' filtered genotypes.rds')
-  saveRDS(glx, gsub(' ', '_', filterfile))
+  #saveRDS(glx, gsub(' ', '_', filterfile))
   
   return(glx)
 }

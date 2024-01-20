@@ -215,7 +215,9 @@ phaseCol <- c(L = terrain.colors(10)[7],
               I = terrain.colors(10)[1],
               D = terrain.colors(10)[4])
 
-conditions  <- read.csv('../phd-simulations/output/conditon_flextable.csv')
+# sim conditions ---------------
+conditions  <- readRDS('./output/dataframes/ph_sim_conditons.rds')
+
 conditions$year <- 0.5
 for(i in 2:nrow(conditions)){
   x <- ifelse(conditions$phase[i] == 'L', 1, 0.5)
@@ -258,12 +260,12 @@ fig1 <- grid.arrange(con + labs(title = 'Sandy inland mouse captures')+ theme(le
                                  axis.title.y = element_text(size = 12)),
                      simCaps+labs(title = expression('Simulated '*italic('N'))), ncol = 1)
 
-ggsave('./figures/fig1_captures_sim.png',fig1,  units = 'cm',
+ggsave('./figures/fig1_ph_captures_sim.png',fig1,  units = 'cm',
        height = 16, width = 16, dpi = 300)
 
 
 # from dungog ---------
-conditionstb <- conditionsx %>%  #read.csv('./output/conditon_flextable.csv') %>% 
+conditionstb <- conditionsx %>%  
   left_join(data.frame(phaseNo = paste0(rep(c('L', 'I', 'D'), 3), rep(1:3, each = 3)),
              realfst = c(0.032, 0.017, 0.034, 0.027, 0.005, 0.012, 0.02, 0.01, 0.03)))
 fx <-conditionstb %>% 
@@ -286,11 +288,12 @@ fx <-conditionstb %>%
   mutate(N = round(N/48)) %>% 
   dplyr::select(-phaseNo) %>% 
   relocate(realfst, .before = N) %>% 
+  rename(`real fst` = realfst) %>% 
   flextable() %>% 
   autofit() %>% 
   align(j = 4, align = 'center') %>% 
   italic(part = 'header', j = 6:8) %>% 
-  bold(j = c(7,8), i = 1:19) %>% 
+  bold(j = c(7,8), i = 1:nrow(conditionstb)) %>% 
   italic(j =5) %>% 
   hline(i = (which(!duplicated(conditionstb$phaseNo))-1)[-1], border = fp_border(color = "grey80",
                                                             width = 1, style = "dashed")) %>% 
