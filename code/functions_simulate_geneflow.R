@@ -155,7 +155,7 @@ em.gl.join <- function(x1, x2){
 }
 
 # big simulation -------------
-em.simulate <- function(zero, mat, conditions){
+em.simulate <- function(zero, mat, conditions, ncores){
   sim <- list()
   gen <- zero#sim[[11]]
   
@@ -171,7 +171,7 @@ em.simulate <- function(zero, mat, conditions){
       # mice dynamics
       gen <- gene.flow(gen, mat, m.ind)
       pops <- seppop(gen)
-      genRepro <- lapply(pops, next.gen, n.offspring = off)
+      genRepro <- mclapply(pops, next.gen, n.offspring = off, mc.cores = ncores)
       genSurvive <- lapply(genRepro, the.survivors, max.N = max.N)
       gen <- reduce(genSurvive, em.gl.join)
       gen@other$ind.metrics$iteration <- i

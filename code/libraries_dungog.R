@@ -22,7 +22,7 @@ library(jpeg)
 # library(raster)
 # library(ggspatial)
 
-library(otuSummary, lib.loc = '../../libraries/')
+library(otuSummary, lib.loc = './../libraries/')
 library(pbapply)
 
 library(zoo)
