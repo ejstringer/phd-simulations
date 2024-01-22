@@ -475,14 +475,32 @@ sum(df_sum_meanchage[df_sum_meanchage$type == 'nSim' & df_sum_meanchage$name == 
  
  ph@other$ind.metrics$phaseNo %>% table
  
+ df_sampleAnalysis$diff %>% sd
  change_nSim2 %>%  
   # bind_rows(changeSim2) %>%
-   #filter(name == 'I1_D1') %>% 
+   filter(i == 1.01) %>% 
    rename(nsim = alf2) %>% 
    left_join(changeSim2[-c(5:6)]) %>% 
    rename(sim = alf2) %>% 
    mutate(diff = nsim - sim) -> df_sampleAnalysis
  
+loci_sampleAnalysis<- split(df_sampleAnalysis, df_sampleAnalysis$loci)
+ 
+loci_sampling <- sapply(loci_sampleAnalysis, function(x) abs(cor(x$sim, x$nsim)))
+
+loci_slope <- sapply(loci_sampleAnalysis, function(x) lm(nsim ~ sim, 
+                                                         data = x)$coefficients[2]) 
+which.max(loci_slope)
+plot(nsim ~ sim, data = loci_sampleAnalysis[[519]])
+
+data.frame(slope = abs(loci_slope), cor = loci_sampling) %>% 
+  filter(slope >1) %>% 
+  ggplot(aes(cor))+
+  geom_histogram(colour = 'black')
+  geom_point()
+boxplot(loci_sampling)
+hist(loci_sampling)
+
  ggplot(df_sampleAnalysis, aes(n, diff, colour = phaseNo)) +
    geom_boxplot()+
    theme_classic()
@@ -490,32 +508,39 @@ sum(df_sum_meanchage[df_sum_meanchage$type == 'nSim' & df_sum_meanchage$name == 
  ggplot(df_sampleAnalysis, 
         aes(sim, nsim, 
             group = phaseNo)) +
-   #geom_point(alpha = 0.1)+
+   geom_point(alpha = 0.1, colour = 'grey30')+
    #facet_wrap(~n)+
    theme_classic()+
-   geom_smooth(method = 'lm')
+   geom_smooth(method = 'lm', aes(colour = phaseNo))
+ df_sampleAnalysis %>% 
+   filter(sim > 0.5) %>% 
+ ggplot(
+        aes(y = diff, fill = n,
+            group = phaseNo)) +
+   geom_boxplot()+
+   #facet_wrap(~n)+
+   theme_classic()
  
 R2<- sapply(phaseNo, function(x) summary(lm(nsim ~ sim, 
                                         data = filter(df_sampleAnalysis, 
                                                       phaseNo == x)))$r.squared)
+
+se <- sapply(phaseNo, function(x) summary(lm(nsim ~ sim, 
+                                            data = filter(df_sampleAnalysis, 
+                                                          phaseNo == x)))$coefficients[2,2])
 
 coef <- sapply(phaseNo, 
        function(x) lm(nsim ~ sim, 
                       data = filter(df_sampleAnalysis,
                                     phaseNo == x))$coefficients) %>% t
  data.frame(R2, phaseNo = names(R2),
+            se=se*1.96,
             intercept = coef[,1],
             slope = coef[,2]) %>% 
    left_join(unique(df_sampleAnalysis[,c('phaseNo', 'n')])) %>% 
    ggplot(aes(n, R2))+
    geom_point()+
+   #scale_x_log10()+
+   #scale_x_sqrt()+
    theme_classic()+
    geom_smooth()
- 
- df_sampleAnalysis %>% 
-   arrange(Sim) %>% 
-   mutate(x = 1:nrow(.)) %>% 
-   ggplot(aes(Sim, diff))+
-   geom_point(alpha = 0.5)+
-   theme_classic()
- 
