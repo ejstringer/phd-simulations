@@ -9,8 +9,11 @@ ph@other$ind.metrics %>% names()
 rain <- em.rain_caps_phase() %>% 
   mutate(trip = factor(trip)) %>% 
   left_join(data.frame(period = paste('period', 1:9),
-            phaseNo = paste0(rep(c('L', 'I', 'D'), 3),
-                             rep(1:3, each = 3))))
+            phaseNo = factor(paste0(rep(c('L', 'I', 'D'), 3),
+                             rep(1:3, each = 3))))) %>% 
+  mutate(phaseNo = factor(phaseNo,
+                          levels  = factor(paste0(rep(c('L', 'I', 'D'), 3),
+                                                        rep(1:3, each = 3)))))
 
 ph@other$ind.metrics <- ph@other$ind.metrics %>% 
   left_join(rain[, c('trip', 'phase', 'period', 'phaseNo')])
