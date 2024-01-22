@@ -27,7 +27,7 @@ gridNames %>% length # the grids to simulate and to be used in the analysis
 
 # base of simulation ---------
 
-ph2 <- gl.keep.pop(ph, as.pop = 'phaseNo', pop.list = 'I1')
+ph2 <- gl.keep.pop(ph, as.pop = 'phaseNo', pop.list = c('I1', 'L1'))
 
 nSample <- table(ph@other$ind.metrics$phaseNo,
                  factor(ph@other$ind.metrics$gridId)) %>% 
@@ -270,7 +270,7 @@ ggsave('./figures/fig4c_alf_meandiff__sum.png',
 
 sum(df_sum_meanchage[df_sum_meanchage$type == 'nSim' & df_sum_meanchage$name == 'Mean',]$value > 0.00223)
 
-
+### fig mean --------
   fig_mean <- ggplot(change_nSim2, 
           aes(name, meandiff, colour = type, group = i))+
    geom_line(linewidth = 0.3, alpha = 0.2)+
@@ -287,16 +287,32 @@ sum(df_sum_meanchage[df_sum_meanchage$type == 'nSim' & df_sum_meanchage$name == 
   scale_x_discrete(labels = sub('_', ' - ', changeReal$name[-1]))+
     ylab('Mean Change in Allele Frquency')
   
+#### t.test --------
+
+rtest <- t.test(changeReal$meandiff, mu = 0)
+nsimtest <- t.test(change_nSim2$meandiff, mu = 0)
+simtest <- t.test(changeSim2$meandiff, mu = 0)
+hist(changeSim2$meandiff)
+sy_ttest <- data.frame(species = 'sy',
+                       data = c('Real', 'n Simulated', 'Simulated'),
+           mean = c(rtest$estimate, nsimtest$estimate, simtest$estimate),
+           df = c(rtest$parameter, nsimtest$parameter, simtest$parameter),
+           t = c(rtest$statistic, nsimtest$statistic, simtest$statistic),
+           pvalue = c(rtest$p.value, nsimtest$p.value, simtest$p.value))
+sy_ttest
+write.csv(sy_ttest, './output/dataframes/sy_t_tests.csv', row.names = F)
    
-  fig_var <- ggplot(change_nSim2,aes(name, vardiff, colour = type, group = i))+
+  ### fig var ------------ 
+  fig_var <- ggplot(change_nSim2,
+                    aes(name, vardiff, colour = type, group = i))+
      geom_line(linewidth = 0.3, alpha = 0.2)+
-     geom_line(data = changeSim2, linewidth = 0.2)+
+     #geom_line(data = changeSim2, linewidth = 0.2)+
      geom_line(data = changeReal[-1,], linewidth = 1)+
      theme_classic()+
     theme(legend.position = c(0.85,0.8),
           legend.text.align = 0,
           legend.background = element_rect(colour = 'grey'))+
-     scale_colour_manual(values = viridis_pal()(10)[c(4,1,7)],
+     scale_colour_manual(values = c('grey', 'coral3'), #viridis_pal()(10)[c(4,1,7)],
                          labels = c(expression({}*italic(n)~textstyle(group("", Simulated, ""))),
                                     'Real',
                                     'Simulated'),
@@ -304,7 +320,8 @@ sum(df_sum_meanchage[df_sum_meanchage$type == 'nSim' & df_sum_meanchage$name == 
     scale_x_discrete(labels = sub('_', ' - ', changeReal$name[-1]))+
     labs(x ="Population Phases")+
     ylab('Variation of Change in Allele Frquency')
- fig_var
+ 
+  fig_var
 
   fig_meanvar <- grid.arrange(fig_mean, fig_var)
   ggsave('/home/stringer2/simulations/fig4_alf_diff_simulations.png',
@@ -319,7 +336,16 @@ sum(df_sum_meanchage[df_sum_meanchage$type == 'nSim' & df_sum_meanchage$name == 
    geom_point()+
    theme_classic()
  ph_real@other$ind.metrics$phaseNo %>% table
- # npp sim alf-----
+ 
+ # save data --------
+ changeReal$species <- 'sy'
+ change_nSim2 <- 'sy'
+ changeSim2 <- 'sy'
+ 
+saveRDS(list(real = changeReal, 
+             nsim = change_nSim2,
+             sim = changeSim2), './output/sy_vis_alf.rds')
+  # npp sim alf-----
  
  # separate by phase ----------
  type.lab <- expression(Real = "Real", nSim = {

@@ -108,6 +108,7 @@ m.alfnpp$i <- 51
 # fig 5 ------------------
 dfslopes.raw <- bind_rows(m.alfnpp, m.alfsim) %>% 
   filter(pvalue < 0.05,
+        # grepl('01', i) | i == '51'
          #R2 > 0.8
   ) %>% 
   mutate(direction = ifelse(slope < 0, 'negative slope', 'positive slope'),
@@ -118,6 +119,7 @@ dfslopes.raw <- bind_rows(m.alfnpp, m.alfsim) %>%
 
 dfslopes <- bind_rows(m.alfnpp, m.alfsim) %>% 
   filter(pvalue < 0.05,
+         #grepl('01', i) | i == '51'
          #R2 > 0.8
          ) %>% 
   mutate(direction = ifelse(slope < 0, 'negative slope', 'positive slope'),
@@ -283,6 +285,8 @@ ggplot(aes(scaffold, position))+
   geom_point()+
   theme_classic()
   
+
+
 # fig 6 ----
 outliers_withoutL1 <- m.alfnpp %>% mutate(abslope = abs(slope)) %>% 
   filter(abslope > 0.02, pvalue < 0.05) %>% 
@@ -466,3 +470,13 @@ ggsave('./figures/fig6_alf_change_real.png',
        alfchangeFig, units = 'cm', height = 8, width = 18, dpi = 300)
 
        
+
+# save data ----------
+m.alfnpp$species <- 'ph'
+m.alfsim$species <- 'ph'
+m.alfnppL1$species <- 'ph'
+dfplot$species <- 'ph'
+saveRDS(list(real = m.alfnpp, sim = m.alfsim,
+             realL1 = m.alfnppL1, alfreal = dfplot),
+        './output/ph_vis_slopes.rds')
+

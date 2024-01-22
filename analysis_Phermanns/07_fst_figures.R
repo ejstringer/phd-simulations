@@ -53,9 +53,9 @@ ggplot(aes(gen, fst, fill = phase))+
 
 dfs %>% group_by(phaseNo, phase, fstch2, fstphase) %>% 
   summarise(n = n()) %>% 
-  pivot_longer(cols = c(fstch2, fstphase)) %>%
+  pivot_longer(cols = c(fstch2, fstphase)) -> dfs_phase
   #filter(!duplicated(name) | name == 'fstphase') %>% 
-  
+dfs_phase %>%   
 ggplot(aes(phaseNo, value, colour = name))+
   geom_hline(yintercept = 0.017, colour = 'grey', lty = 2)+
   geom_hline(yintercept = 0.034, colour = 'grey', lty = 2)+
@@ -117,7 +117,7 @@ conditions  <- lapply(list.files('/data/scratch/emily/simulations/meta/', full.n
   do.call('rbind', .)
 
 conditionsx <-conditions %>% rename(Nmax = N) %>% 
-  group_by(gen, phaseNo, phase, Nmax, migration) %>% 
+  group_by(gen,year, phaseNo, phase, Nmax, migration) %>% 
   summarise(N = mean(nInd),
             fstgen = mean(fst),
             cil = fstgen - (sd(fst)/n())*1.96,
@@ -137,3 +137,13 @@ conditionsTB %>%
          CIL = ifelse(duplicated(phaseNo), NA, CIL),
          CIU = ifelse(duplicated(phaseNo), NA, CIU))
 write.csv(conditionsTB, './output/dataframes/ph_sim_conditons.csv', row.names = F) 
+
+# savedata -------
+dfs$species <- 'ph'
+vis$species <- 'ph'
+dfs_phase$species <-  'ph'
+conditionsTB$species <-  'ph'
+conditionsTB$year <- conditionsTB$gen
+saveRDS(list(fstgen = dfs, phasevis = vis, fstphase = dfs_phase,
+             conditionstb = conditionsTB),
+        './output/ph_vis_fst.rds')

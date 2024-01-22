@@ -106,8 +106,10 @@ m.alfnpp$i <- 51
 
 
 # fig 5 ------------------
+## save data -------
 dfslopes.raw <- bind_rows(m.alfnpp, m.alfsim) %>% 
   filter(pvalue < 0.05,
+         #grepl('01', i) | i == '51'
          #R2 > 0.8
   ) %>% 
   mutate(direction = ifelse(slope < 0, 'negative slope', 'positive slope'),
@@ -115,9 +117,12 @@ dfslopes.raw <- bind_rows(m.alfnpp, m.alfsim) %>%
          slope = abs(slope),
          sim_i = round(i))
 
+saveRDS(list(m.alfnpp, m.alfsim), './output/sy_vis_slopes.rds')
+
 
 dfslopes <- bind_rows(m.alfnpp, m.alfsim) %>% 
   filter(pvalue < 0.05,
+         grepl('01', i) | i == '51'
          #R2 > 0.8
          ) %>% 
   mutate(direction = ifelse(slope < 0, 'negative slope', 'positive slope'),
@@ -248,7 +253,7 @@ pivot_longer(cols = minp: slopeabs) %>%
 
 grid.arrange(g2, g3, heights = c(2.2,2))
 
-## real negative slopes  ----------
+# real negative slopes  ----------
 phaseCol <- c(low = terrain.colors(10)[7],
               increase = terrain.colors(10)[1],
               decrease = terrain.colors(10)[4])
@@ -286,7 +291,7 @@ ggplot(aes(scaffold, position))+
 outliers_withoutL1 <- m.alfnpp %>% mutate(abslope = abs(slope)) %>% 
   filter(abslope > 0.02, pvalue < 0.05) %>% 
   dplyr::select(loci) %>% unlist
-table(negslopes$loci %in% outliers_withoutL1)
+
 negslopes <- m.alfnppL1 %>%
   mutate(abslope = abs(slope),
          direction = ifelse(slope < 0, 'negative slope', 'positive slope')) %>%
@@ -300,7 +305,7 @@ scaftb <- negslopes$scaffold %>% table
 scaftb
 names(scaftb[scaftb > 9])
 
-
+table(negslopes$loci %in% outliers_withoutL1)
 
 names(negslopes)
 negslopes$R2 %>% sort(., decreasing = T)

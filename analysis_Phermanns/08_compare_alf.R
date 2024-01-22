@@ -213,6 +213,32 @@ stopCluster(cl)
 changeSim2 <- do.call('bind_rows', changeSim)
 change_nSim2 <- do.call('bind_rows', change_nSim)
 table(change_nSim2$i)
+
+# save data --------
+
+changeReal$species <- 'ph'
+change_nSim2$species <- 'ph'
+changeSim2$species <- 'ph'
+
+saveRDS(list(real = changeReal, 
+             nsim = change_nSim2,
+             sim = changeSim2), './output/ph_vis_alf.rds')
+
+
+#### t.test --------
+
+rtest <- t.test(changeReal$meandiff, mu = 0)
+nsimtest <- t.test(change_nSim2$meandiff, mu = 0)
+simtest <- t.test(changeSim2$meandiff, mu = 0)
+hist(changeSim2$meandiff)
+ttest <- data.frame(species = 'ph',
+                       data = c('Real', 'n Simulated', 'Simulated'),
+                       mean = c(rtest$estimate, nsimtest$estimate, simtest$estimate),
+                       df = c(rtest$parameter, nsimtest$parameter, simtest$parameter),
+                       t = c(rtest$statistic, nsimtest$statistic, simtest$statistic),
+                       pvalue = c(rtest$p.value, nsimtest$p.value, simtest$p.value))
+ttest
+write.csv(ttest, './output/dataframes/ph_t_tests.csv', row.names = F)
  # summary stats --------
  change_nSim2 %>% 
   bind_rows(changeReal) %>%
