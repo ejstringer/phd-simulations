@@ -713,32 +713,42 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
          units = 'cm', height = 14, width = 12, dpi = 300)
   
   ## additional histogram of counts ------
-  dfslopes.raw$i[dfslopes.raw$i == 51] %>% table
-  df2 <-as.data.frame(table(dfslopes.raw$i[dfslopes.raw$slope > outlierSlopes]))
-  as.data.frame(table(dfslopes.raw$i)) %>% 
+  dfslopes.raw$i[dfslopes.raw$i == 51 & dfslopes.raw$species==
+                   'P. hermannsburgensis'] %>% table
+  df2 <- dfslopes.raw$i[dfslopes.raw$slope > outlierSlopes]
+  
+  df2 <-as.data.frame(table(dfslopes.raw$i[dfslopes.raw$slope > outlierSlopes],
+                            dfslopes.raw$species[dfslopes.raw$slope > outlierSlopes])) 
+    
+  
+  as.data.frame(table(dfslopes.raw$i, dfslopes.raw$species)) %>% 
   mutate(type = ifelse(Var1 == 51, 'Real', 'Sim')) %>% 
     rename(Freq1 = Freq) %>% 
-    cbind(df2[2]) %>% 
+    left_join(df2) %>% 
     pivot_longer(cols = c(Freq1, Freq)) %>% 
     mutate(name = ifelse(name == 'Freq1', 
                          'pvalue < 0.05',
                          'pvalue < 0.05 and slope > 0.021')) %>% 
-    ggplot(aes(x = value, fill = type))+ 
-    geom_histogram(colour = 'black') + 
-    facet_wrap(~name, scales = 'free_x', strip.position = 'bottom')+
+    ggplot(aes(x = value, fill = type, colour = type))+ 
+    geom_histogram() + 
+    facet_wrap(Var2~name, scales = 'free_x'#, strip.position = 'bottom'
+               )+
     scale_fill_manual(values = c('coral2', 'grey70'),
+                      name = 'Data')+
+    scale_colour_manual(values = c('coral2', 'black'),
                       name = 'Data')+
     theme_bw()+
     theme(strip.background = element_blank(),
-          strip.placement = 'outside',
-          legend.position = c(0.9,0.79),
+        #  strip.placement = 'outside',
+        strip.text.x = element_text(face = 'italic'),
+          legend.position = c(0.9,0.89),
           legend.background = element_rect(colour = 'grey'),
           panel.grid = element_blank())+
     xlab('number of loci (250 simulation subsets)') ->fig_hist
   fig_hist
   
-  ggsave('./figures/figS1_models_loci_count.png',fig_hist,
-         units = 'cm', height = 8, width = 12, dpi = 300)
+  ggsave('./figures/figS1_models_loci_count_hist.png',fig_hist,
+         units = 'cm', height = 14, width = 12, dpi = 300)
 
   
  
