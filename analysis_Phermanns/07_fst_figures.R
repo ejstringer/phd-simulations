@@ -3,7 +3,8 @@
 phaseCol <- c(L = terrain.colors(10)[7],
               I = terrain.colors(10)[1],
               D = terrain.colors(10)[4])
-dfs <- lapply(list.files('/data/scratch/emily/simulations/meta/',full.names = T), read.csv) %>% 
+dfs <- lapply(list.files('/data/scratch/emily/simulations/meta/',
+                         full.names = T), read.csv) %>% 
   do.call('rbind', .) %>% 
   mutate(phaseNo = factor(phaseNo, 
                           levels = paste0(rep(c('L','I', 'D'), 3), 
@@ -66,7 +67,7 @@ ggplot(aes(phaseNo, value, colour = name))+
                      guide = guide_legend(override.aes = list(size = c(3,3),
                                                               alpha = 1)))+
   scale_size_manual(values = c(3,3), guide = 'none')+
-  geom_point(aes(size = name), alpha = 0.1)+
+  geom_point(aes(size = name), alpha = 0.91)+
   theme_classic()+
   #guides(color = guide_legend(override.aes = list(size = 2))) +
   theme(legend.position = 'bottom' #c(0.8,0.9),
