@@ -43,12 +43,15 @@ data.frame(fst = sapply(simFst_initiate, mean, na.rm = T),
   mutate(f17 = abs(fst - 0.017),
          min = ifelse(min(f17)==f17, 'Select', ''),
          grp = 'cool') %>% 
-  ggplot(aes(gen, fst, colour = min))+
+  arrange(f17) %>% 
+  mutate(forder = order(f17)) %>% 
+  arrange(gen) -> dfchoice 
+  ggplot(dfchoice, aes(gen, fst, colour = min))+
   geom_hline(yintercept = 0.017, colour = 'grey', lty = 2)+
   geom_point(size =4)+
   theme_classic()
 
-nSel <- 16
+nSel <- which(dfchoice$min=='Select')
 initialisedSelected <- initialiseSim[[nSel]][[1]]
 simFst_initiate[[nSel]] %>% mean(., na.rm = T)
 

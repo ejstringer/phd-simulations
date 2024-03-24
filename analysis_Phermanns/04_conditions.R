@@ -10,14 +10,21 @@ ngrids <- c(37, 25, 17, 23, 16, 33, 27, 32)
 # migration 
 
 N_sim <- c(100,      50,    25,   50,     50,   25,   50, 50)
+c(0.1446, 0.06, 0.50, 0.66, 0.30, 0.49, 0.825, 0.07)
+#N_sim <- c(100,      200,    25,   50,     200,   25,   25, 200)
 mBased <- apply(data.frame(n = N_sim, f = fstch2),1, function(x) em.mRate(x[2], x[1]))
-
+mBased
 data.frame(n = N_sim, fst = fstch2, m = round(mBased,2)) %>% 
   mutate(Nm = round(n*m),
          s = phaseNo)
 
-sapply(c(0.003, 0.007, 0.003, 0.001, NA, 0.005, 0, 0),
-       function(x) em.mRate(x, 100))
+sapply(c(0.003, 0.007, 0.003, 0.001, NA, 0.005, 0, 0), # syoung
+       function(x) em.mRate(x, 100)) %>% 
+  data.frame(m = .) %>% 
+  mutate(N = 100,
+         m = ifelse(m > 1, 0.99, m),
+         m = ifelse(is.na(m), mean(c(0.9999, 0.4975)), m),
+         Nm = round(N*m))
 
 ## old migration estimates
 mPhase <- c(L = em.mRate(mean(c(0.02,0.027)), 25), # low
@@ -25,8 +32,13 @@ mPhase <- c(L = em.mRate(mean(c(0.02,0.027)), 25), # low
             I = em.mRate(mean(c(0.01,0.005)), 50))# increase
 mPhase
 m_rate <- c(0.15, 0.09, 0.42, 0.66,0.3, 0.42, 0.66, 0.09)
+# mew migration
 
+m_rate <- mBased
 
+# new guess migration
+
+#m_rate <- c(0.15, 0.07, 0.36, 0.99,0.206, 0.49, 0.99, 0.08)
 ## define simulation conditions ---------
 
 

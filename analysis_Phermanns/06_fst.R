@@ -9,7 +9,7 @@ phaselength <- c(1, 2, 2, 4, 2, 4, 2, 2)
 simdir <- '/data/scratch/emily/simulations/genlights/'
 fstdir <- '/data/scratch/emily/simulations/fst/'
 condir <- '/data/scratch/emily/simulations/meta/'
-
+dir.create(fstdir)
 sim_list <- list.files('/data/scratch/emily/simulations/genlights/')
 
 

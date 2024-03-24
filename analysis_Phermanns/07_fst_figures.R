@@ -32,13 +32,15 @@ ggplot(aes(gen, fst, fill = phase))+
   geom_area(data = vis, 
             aes(x = gen, y = fst, group = phaseNo, fill = phase), 
             alpha = 0.60) +
+  geom_point(size = 1, #position = position_nudge(x = 0.1, y = 0), 
+             alpha = 0.5, colour = 'grey50')+
   geom_hline(yintercept = 0.017, colour = 'grey', lty = 2)+
   geom_hline(yintercept = 0.034, colour = 'grey', lty = 2)+
   geom_hline(yintercept = 0.005, colour = 'grey', lty = 2)+
   geom_line(aes(group = simulation), linewidth = 0.2, 
             alpha = 0.5, colour = 'grey50')+
  # geom_errorbar(aes(ymin = lower, ymax = upper), width = 0)+
-  #geom_point(size = 1, position = position_nudge(x = 0.1, y = 0), alpha = 0.5)+
+  
  # geom_boxplot(aes(group = gen), colour = 'black', width = 0.5)+
   #  geom_point(aes(y = fstch2), colour = 'grey60', alpha = 0.5)+
   theme_classic()+
