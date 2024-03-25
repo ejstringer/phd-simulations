@@ -8,12 +8,25 @@ condir <- '/data/scratch/emily/simulations/meta/'
 dir.create(simdir)
 dir.create(condir)
 
+mAdjust <- rep(c(0, -0.02, 0.02, -0.02, -0.02, 0, 0.02, -0.02), phaselength)
+mAdjust <- 0
+
 system.time({
 for (i in 1:length(sim_schedule)) {
   
   saved_sims <- list.files(path = '/data/scratch/emily/simulations/genlights/')
   if(!sim_schedule[i] %in% saved_sims){
     print(paste('running simulation', i))
+    
+    # adjust m
+    m<- conditions$migration+mAdjust
+    
+    m <- ifelse(m <0 , 0, m)
+    m <- ifelse(m >= 1, 1, m)
+    print(round(m,3))
+   conditions$migration <- m
+   
+  # Run simulations 
   sim <- em.simulate(initialisedSelected, mat, conditions, ncores = 30)
   
   simJoin <- reduce(sim, em.gl.join)
