@@ -3,6 +3,7 @@
 phaseCol <- c(L = terrain.colors(10)[7],
               I = terrain.colors(10)[1],
               D = terrain.colors(10)[4])
+list.files('/data/scratch/emily/simulations/fst/')
 dfs <- lapply(list.files('/data/scratch/emily/simulations/meta/',
                          full.names = T), read.csv) %>% 
   do.call('rbind', .) %>% 

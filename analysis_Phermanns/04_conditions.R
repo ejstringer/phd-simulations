@@ -10,8 +10,7 @@ ngrids <- c(37, 25, 17, 23, 16, 33, 27, 32)
 # migration 
 
 N_sim <- c(100,      50,    25,   50,     50,   25,   50, 50)
-c(0.1446, 0.06, 0.50, 0.66, 0.30, 0.49, 0.825, 0.07)
-#N_sim <- c(100,      200,    25,   50,     200,   25,   25, 200)
+
 mBased <- apply(data.frame(n = N_sim, f = fstch2),1, function(x) em.mRate(x[2], x[1]))
 mBased
 data.frame(n = N_sim, fst = fstch2, m = round(mBased,2)) %>% 
@@ -36,9 +35,9 @@ m_rate <- c(0.15, 0.09, 0.42, 0.66,0.3, 0.42, 0.66, 0.09)
 
 m_rate <- mBased
 
-# new guess migration
+# based on simulations with adjust m estimates
 
-#m_rate <- c(0.15, 0.07, 0.36, 0.99,0.206, 0.49, 0.99, 0.08)
+m_rate <- c(0.145, 0.142, 0.50, 0.635, 0.412, 0.49, 0.815, 0.16)
 ## define simulation conditions ---------
 
 
@@ -53,7 +52,7 @@ conditions <- data.frame(gen = 1:sum(phaselength),
          N = case_when(
            phase == 'L' ~ 25,
            phase == 'I' ~ 100,
-           phase == 'D' ~ 50,
+           phase == 'D' ~ 35, # initial value of 50
          ),
          N = ifelse(phase == 'D' & duplicated(phaseNo), 25, N),
          N = ifelse(phaseNo == 'I2', 200, N),

@@ -1,15 +1,21 @@
 ## run simulation ----------
 
 phaseNo <- paste0(rep(c('L','I', 'D'), 3), rep(1:3, each = 3))[-1]
-sim_schedule <- paste0('simulation_', sprintf("%02d", 1:20), '.rds')
+sim_schedule <- paste0('simulation_', sprintf("%02d", 1:10), '.rds')
 initialisedSelected <- readRDS('./output/initialised_simulation_gen0.rds')
 simdir <- '/data/scratch/emily/simulations/genlights/'
 condir <- '/data/scratch/emily/simulations/meta/'
 dir.create(simdir)
 dir.create(condir)
 
-mAdjust <- rep(c(0, -0.02, 0.02, -0.02, -0.02, 0, 0.02, -0.02), phaselength)
+
+# no adjustment
 mAdjust <- 0
+# original adjustment
+mAdjust <- rep(c(0, -0.02, 0.02, -0.02, -0.02, 0, 0.02, -0.02), phaselength)
+# after adjustment (D: N=35)
+mAdjust <- rep(c(0, -0.02, 0, 0, -0.02, 0, 0, -0.02), phaselength)
+
 
 system.time({
 for (i in 1:length(sim_schedule)) {
