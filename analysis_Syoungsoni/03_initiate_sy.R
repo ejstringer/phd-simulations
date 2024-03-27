@@ -3,8 +3,8 @@ em.mRate(0.003, 200)
 # conditons ----------
 initialise_conditions <- data.frame(gen = 0, 
                                     phaseNo = 'Initial',
-                                    N = 100,
-                                    migration = 0.93,#seq(0.90, 0.95, 0.01),
+                                    N = 200,
+                                    migration = 0.93,#rep(seq(0.89, 0.93, 0.01), each = 4),#0.93
                                     nInd = 4800,
                                     offspring = 6,
                                     pops = nPop(simStart),
@@ -13,7 +13,7 @@ initialise_conditions <- data.frame(gen = 0,
 initialise_conditions 
 
 # run sim (generation 0) -----------
-initialiseSim  <- pblapply(1:10, function(x) em.simulate(simStart, 
+initialiseSim  <- pblapply(1:20, function(x) em.simulate(simStart, 
                                                        mat, 
                                                        initialise_conditions,
                                                        ncores = 24))

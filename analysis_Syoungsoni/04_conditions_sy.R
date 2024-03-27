@@ -17,6 +17,28 @@ m_rate <- c(0.83, 0.66, 0.66, 0.99,0.66, 0.66, 0.99, 0.66)
 ngridsSy <- rowSums(table(ph@other$ind.metrics$phaseNo,
                           ph@other$ind.metrics$gridId)>0)
 ngrids <- ngridsSy[-1]
+
+# migration based on fst
+
+sapply(c(0.003, 0.007, 0.003, 0.001, NA, 0.005, 0, 0), # syoung
+       function(x) em.mRate(x, 100)) %>% 
+  data.frame(m = .) %>% 
+  mutate(N = 100,
+         m = ifelse(m > 1, 0.99, m),
+         m = ifelse(is.na(m), mean(c(0.9999, 0.4975)), m),
+         Nm = round(N*m))
+
+m_rate <- sapply(fstch2, function(x) em.mRate(x, 200))
+
+m_rate[m_rate>1] <- 0.99
+mNA <- which(is.na(m_rate))
+m_rate[mNA] <- mean(m_rate[c(mNA-1,mNA+1)]) 
+
+# N = 200 achieve FST
+
+m_rate <- c(0.615, 0, 0.695, 0.99, 0.619, 0.229, 0.99, 0.99)
+
+#m_rate[c(1,3)] <- 0.99
 ## define simulation conditions ---------
 
 
@@ -34,7 +56,7 @@ conditions <- data.frame(gen = 1:sum(phaselength),
            phase == 'D' ~ 25,
          ),
          N = ifelse(phaseNo == 'I2', 250, N),
-         N = 100,
+         N = 200,
          offspring = 6) %>% 
   left_join(data.frame(grids = phase_nGrids, phaseNo = names(phase_nGrids)))
 

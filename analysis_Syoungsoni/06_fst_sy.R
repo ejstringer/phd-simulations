@@ -9,6 +9,7 @@ phaselength <- c(1, 1, 1, 2, 1, 3, 1, 1)
 simdir <- '/data/scratch/emily/simulations/sy/genlights/'
 fstdir <- '/data/scratch/emily/simulations/sy/fst/'
 condir <- '/data/scratch/emily/simulations/sy/meta/'
+dir.create(fstdir)
 
 sim_list <- list.files('/data/scratch/emily/simulations/sy/genlights/')
 
@@ -30,7 +31,7 @@ if(!fstfilename %in% fst_list){
 confilename <- paste0(condir, sub('.rds', '_conditions.csv', filename))
 simAll <- readRDS(paste0(simdir, filename))
 
-print('finish loading file...')
+print(paste('finish loading file...', Sys.time()))
   simFst <- foreach(k = tofst) %dopar% {
     x <- TRUE
     while(x){
@@ -39,7 +40,7 @@ print('finish loading file...')
     } # end while
     fst
   } # end foreach
-  print('finish calculating fsts...')
+  print(paste('finish calculating fsts...', Sys.time()))
 
 saveRDS(simFst, paste0(fstdir, fstfilename))
 

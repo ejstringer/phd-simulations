@@ -3,7 +3,8 @@
 phaseCol <- c(L = terrain.colors(10)[7],
               I = terrain.colors(10)[1],
               D = terrain.colors(10)[4])
-dfs <- lapply(list.files('/data/scratch/emily/simulations/sy/meta/',full.names = T), read.csv) %>% 
+dfs <- lapply(list.files('/data/scratch/emily/simulations/sy/meta/',
+                         full.names = T), read.csv) %>% 
   do.call('rbind', .) %>% 
   mutate(phaseNo = factor(phaseNo, 
                           levels = paste0(rep(c('L','I', 'D'), 3), 
@@ -37,7 +38,7 @@ ggplot(aes(gen, fst, fill = phase))+
   geom_line(aes(group = simulation), linewidth = 0.2, 
             alpha = 0.5, colour = 'grey50')+
  # geom_errorbar(aes(ymin = lower, ymax = upper), width = 0)+
-  #geom_point(size = 1, position = position_nudge(x = 0.1, y = 0), alpha = 0.5)+
+  geom_point(size = 1, position = position_nudge(x = 0.1, y = 0), alpha = 0.5)+
  # geom_boxplot(aes(group = gen), colour = 'black', width = 0.5)+
   #  geom_point(aes(y = fstch2), colour = 'grey60', alpha = 0.5)+
   theme_classic()+
@@ -57,8 +58,8 @@ dfs %>% group_by(phaseNo, phase, fstch2, fstphase) %>%
   #filter(!duplicated(name) | name == 'fstphase') %>% 
 dfs_phase %>%   
 ggplot(aes(phaseNo, value, colour = name))+
+  geom_hline(yintercept = 0.034, colour = 'grey', lty = 2)+
   geom_hline(yintercept = 0.017, colour = 'grey', lty = 2)+
-  geom_hline(yintercept = 0.008, colour = 'grey', lty = 2)+
   geom_hline(yintercept = 0.005, colour = 'grey', lty = 2)+
   scale_color_manual(values = c('coral3', 'grey50'),
                      name = '',
