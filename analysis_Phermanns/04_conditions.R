@@ -17,13 +17,6 @@ data.frame(n = N_sim, fst = fstch2, m = round(mBased,2)) %>%
   mutate(Nm = round(n*m),
          s = phaseNo)
 
-sapply(c(0.003, 0.007, 0.003, 0.001, NA, 0.005, 0, 0), # syoung
-       function(x) em.mRate(x, 100)) %>% 
-  data.frame(m = .) %>% 
-  mutate(N = 100,
-         m = ifelse(m > 1, 0.99, m),
-         m = ifelse(is.na(m), mean(c(0.9999, 0.4975)), m),
-         Nm = round(N*m))
 
 ## old migration estimates
 mPhase <- c(L = em.mRate(mean(c(0.02,0.027)), 25), # low
@@ -38,6 +31,10 @@ m_rate <- mBased
 # based on simulations with adjust m estimates
 
 m_rate <- c(0.145, 0.142, 0.50, 0.635, 0.412, 0.49, 0.815, 0.16)
+
+# final migrations 
+
+m_rate <- c(0.145, 0, 0.50, 0.635, 0.352, 0.49, 0.815, 0)
 ## define simulation conditions ---------
 
 
@@ -52,7 +49,7 @@ conditions <- data.frame(gen = 1:sum(phaselength),
          N = case_when(
            phase == 'L' ~ 25,
            phase == 'I' ~ 100,
-           phase == 'D' ~ 35, # initial value of 50
+           phase == 'D' ~ 30, # initial value of 50
          ),
          N = ifelse(phase == 'D' & duplicated(phaseNo), 25, N),
          N = ifelse(phaseNo == 'I2', 200, N),
