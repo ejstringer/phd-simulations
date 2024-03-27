@@ -167,11 +167,11 @@ changeReal <- em.alf_change(alfReal, type = 'Real', iteration = 1)%>%
 
 
 # setup cores -----------------
-ncores <- 25
+ncores <- 20
 cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 
-changeSim <- foreach(i = 1:50) %dopar% {
+changeSim <- foreach(i = 1:20) %dopar% {
   library(dartR)
   library(tidyverse)
   print(paste('sim', i, '....Go!!'))
@@ -186,7 +186,7 @@ changeSim <- foreach(i = 1:50) %dopar% {
               vardiff = var(value))
 }
 
-change_nSim <- foreach(i = 1:50) %dopar% {
+change_nSim <- foreach(i = 1:20) %dopar% {
   library(dartR)
   library(tidyverse)
   print(paste('sim', i, '....Go!!'))
@@ -194,7 +194,7 @@ change_nSim <- foreach(i = 1:50) %dopar% {
                          full.names = T)[i]
   simx <- readRDS(fileload)[12:19]
   nSim_list <- list()
- for(j in 1:20) {
+ for(j in 1:50) {
     nsim<- em.sample_sim(samplex, simx)
     nSimalf <- em.alf_df(nsim, meta)
     changenSim <- em.alf_change(nSimalf, type = 'nSim', iteration = j/100)
@@ -327,20 +327,13 @@ write.csv(sy_ttest, './output/dataframes/sy_t_tests.csv', row.names = F)
   ggsave('/home/stringer2/simulations/fig4_alf_diff_simulations.png',
          fig_meanvar, units = 'cm', height = 20, width = 16, dpi = 300)
   
-  
-  df3 %>% group_by(type, name) %>% 
-   summarise(mean = mean(value),
-             var = var(value)) %>% 
-   ggplot(aes(type, mean, colour = name, group = name))+
-   geom_line()+
-   geom_point()+
-   theme_classic()
+
  ph_real@other$ind.metrics$phaseNo %>% table
  
  # save data --------
  changeReal$species <- 'sy'
- change_nSim2 <- 'sy'
- changeSim2 <- 'sy'
+ change_nSim2$species <- 'sy'
+ changeSim2$species <- 'sy'
  
 saveRDS(list(real = changeReal, 
              nsim = change_nSim2,

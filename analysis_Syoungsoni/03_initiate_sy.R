@@ -5,7 +5,7 @@ initialise_conditions <- data.frame(gen = 0,
                                     phaseNo = 'Initial',
                                     N = 200,
                                     migration = 0.93,#rep(seq(0.89, 0.93, 0.01), each = 4),#0.93
-                                    nInd = 4800,
+                                    nInd = 4800*2,
                                     offspring = 6,
                                     pops = nPop(simStart),
                                     loci = nLoc(simStart))
