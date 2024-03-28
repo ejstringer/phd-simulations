@@ -74,7 +74,7 @@ dfsSy <- lapply(list.files('/data/scratch/emily/simulations/sy/meta_mEquation/',
 
 dfs_N200 <- lapply(list.files('/data/scratch/emily/simulations/sy/meta_N200_mEquation/',
                              full.names = T), read.csv) %>% 
-  do.call('bind_rows', .) %>% 
+  do.call('rbind', .) %>% 
   mutate(phaseNo = factor(phaseNo, 
                           levels = paste0(rep(c('L','I', 'D'), 3), 
                                           rep(1:3, each = 3))[-1]))
@@ -127,14 +127,14 @@ dfs_phaseData %>%
   geom_hline(yintercept = 0.017, colour = 'grey', lty = 2)+
   geom_hline(yintercept = 0.034, colour = 'grey', lty = 2)+
   geom_hline(yintercept = 0.005, colour = 'grey', lty = 2)+
-  scale_color_manual(values = c('coral3', 'yellow','orange', 'red'),
+  scale_color_manual(values = c('black', 'yellow','orange', 'red'),
                      name = 'Scenario',
                      labels = c('Observed', 'Simulated step 1',
                                 'Simulated step 2','Simulated step 3'),
-                     guide = guide_legend(override.aes = list(size = c(3,4,3,2),
+                     guide = guide_legend(override.aes = list(size = c(3,4,3,2)-0.5,
                                                               alpha = 1)))+
   facet_wrap(~species, ncol = 1)+
-  scale_size_manual(values = c(3,4,3,2), guide = 'none')+
+  scale_size_manual(values = c(3,4,3,2)-0.5, guide = 'none')+
   scale_alpha_manual(values = c(0.1, 0.2,0.2, 0.3), guide = 'none')+
   geom_point(aes(size = name, alpha = name), position = position_dodge(0.5))+
   theme_bw()+

@@ -10,7 +10,7 @@ dfs <- lapply(list.files('/data/scratch/emily/simulations/meta/',
   mutate(phaseNo = factor(phaseNo, 
                           levels = paste0(rep(c('L','I', 'D'), 3), 
                                           rep(1:3, each = 3))[-1]))
-
+table(dfs$simulation, duplicated(dfs$fst))
 dfs %>% head
 
 phaseNo <- paste0(rep(c('L','I', 'D'), 3), rep(1:3, each = 3))[-1]
@@ -19,7 +19,7 @@ phaseNo <- paste0(rep(c('L','I', 'D'), 3), rep(1:3, each = 3))[-1]
              phaseNo = rep(phaseNo, each = 4),
              lower = 0,
              upper = 0.04,
-             fst = c(0, rep(rep(c(0.04, 0), each = 2), 8))[-32]) %>% 
+             fst = c(0, rep(rep(c(0.042, 0), each = 2), 8))[-32]) %>% 
    mutate(phase = str_sub(phaseNo, 1,1),
           phase = factor(phase, levels = c('L','I', 'D')),
           phaseNo= factor(phaseNo, 
@@ -50,7 +50,7 @@ ggplot(aes(gen, fst, fill = phase))+
   scale_fill_manual(values = phaseCol,
                      name = 'Population Phase',
                      labels = c('low', 'increase', 'decrease'))+
-  ylim(0,0.04)+
+  ylim(0,0.042)+
   ylab('Fst')+
   xlab('generation') -> figa;figa 
 #ggsave('./test_fig.png')
