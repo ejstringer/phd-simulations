@@ -13,8 +13,6 @@ em.alf_npp_model <- function(a1, iteration){
   
 }
 
-dir.create('/data/scratch/emily/simulations/sy/models')
-
 # npp random -----------
 meta <- ph@other$ind.metrics %>% 
   group_by(period, phaseNo, phase, npp) %>% 
@@ -26,7 +24,7 @@ random <- meta[,c('phaseNo', 'nppTrue')]  %>% unique()
 set.seed(444)
 random$npp <- sample(random$nppTrue, 9); cor(random$nppTrue, random$npp)
 plot(log(npp)~log(nppTrue), data = random)
-
+random
 meta <- left_join(meta, random)
 
 # real -------
@@ -46,14 +44,16 @@ ncores <- 20
 cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 
+dir.create('/data/scratch/emily/simulations/sy/models')
+
 # sims m -------
 models_nSim <- foreach(i = 1:20) %dopar% {
   library(dartR)
   library(tidyverse)
   print(paste('sim', i, '....Go!!'))
-  fileload <- list.files('/data/scratch/emily/simulations/genlights',
+  fileload <- list.files('/data/scratch/emily/simulations/sy/genlights',
                          full.names = T)[i]
-  simx <- readRDS(fileload)[20:27]
+  simx <- readRDS(fileload)[12:19]
   nSim_list <- list()
   for(j in 1:25) { # can change to more
     nsim<- em.sample_sim(samplex, simx)
@@ -122,9 +122,10 @@ m.alfnpp$i <- 21
 
 
 # fig 5 ------------------
+## save data -------
 dfslopes.raw <- bind_rows(m.alfnpp, m.alfsim) %>% 
   filter(pvalue < 0.05,
-        # grepl('01', i) | i == '51'
+         #grepl('01', i) | i == '51'
          #R2 > 0.8
   ) %>% 
   mutate(direction = ifelse(slope < 0, 'negative slope', 'positive slope'),
@@ -132,10 +133,12 @@ dfslopes.raw <- bind_rows(m.alfnpp, m.alfsim) %>%
          slope = abs(slope),
          sim_i = round(i))
 
+saveRDS(list(m.alfnpp, m.alfsim), './output/sy_vis_random.rds')
+
 
 dfslopes <- bind_rows(m.alfnpp, m.alfsim) %>% 
   filter(pvalue < 0.05,
-         #grepl('01', i) | i == '51'
+         grepl('01', i) | i == '51'
          #R2 > 0.8
          ) %>% 
   mutate(direction = ifelse(slope < 0, 'negative slope', 'positive slope'),
@@ -266,7 +269,7 @@ pivot_longer(cols = minp: slopeabs) %>%
 
 grid.arrange(g2, g3, heights = c(2.2,2))
 
-## real negative slopes  ----------
+# real negative slopes  ----------
 phaseCol <- c(low = terrain.colors(10)[7],
               increase = terrain.colors(10)[1],
               decrease = terrain.colors(10)[4])
@@ -285,43 +288,40 @@ m.alfnppL1$type <- 'Real'
 nrow(m.alfnppL1)
 
 
-locmeta_ph <- ph@other$loc.metrics[,c(1,28,5,6,9,10, 29)]
-names(locmeta_ph) <- c('AlleleID', 'uid', 'mus_genome', 'mus_position',
-                    'Pse_genome', 'Pse_position', 'rdepth')  
+locmeta_ph <- ph@other$loc.metrics[,c(1,24,5,6, 25)]
+names(locmeta_ph) <- c('AlleleID', 'uid', 'tas_genome', 'tas_position','rdepth')  
 locmeta_ph %>% head
 locmeta <- locmeta_ph %>% 
-  mutate(scaffold = sub('HiC_scaffold_', '', Pse_genome),
+  mutate(scaffold = sub('GL', '', tas_genome),
          scaffold = ifelse(scaffold == '', 0, scaffold),
          scaffold = as.numeric(scaffold)) %>% 
   group_by(scaffold) %>% 
-  mutate(position = Pse_position - min(Pse_position))
+  mutate(position = tas_position - min(tas_position))
 locmeta %>% 
-  filter(scaffold < 25 & scaffold>0) %>% 
+ # filter(scaffold < 25 & scaffold>0) %>% 
 ggplot(aes(scaffold, position))+
   geom_point()+
   theme_classic()
   
-
-
 # fig 6 ----
 outliers_withoutL1 <- m.alfnpp %>% mutate(abslope = abs(slope)) %>% 
   filter(abslope > 0.02, pvalue < 0.05) %>% 
   dplyr::select(loci) %>% unlist
-table(negslopes$loci %in% outliers_withoutL1)
+
 negslopes <- m.alfnppL1 %>%
   mutate(abslope = abs(slope),
          direction = ifelse(slope < 0, 'negative slope', 'positive slope')) %>%
   filter(abslope > 0.02, pvalue < 0.05, loci %in% outliers_withoutL1) %>% 
-  left_join(locmeta) %>% 
-  mutate(Pse_genome = factor(Pse_genome),
-         mus_genome = factor(mus_genome)) %>% 
-  rename(pse_genome = Pse_genome)
+  left_join(locmeta) #%>% 
+  # mutate(Pse_genome = factor(Pse_genome),
+  #        mus_genome = factor(mus_genome)) %>% 
+  # rename(pse_genome = Pse_genome)
 nrow(negslopes)
 scaftb <- negslopes$scaffold %>% table 
 scaftb
 names(scaftb[scaftb > 9])
 
-
+table(negslopes$loci %in% outliers_withoutL1)
 
 names(negslopes)
 negslopes$R2 %>% sort(., decreasing = T)
@@ -394,7 +394,7 @@ filter(dfplot, phase != 'decrease2',
                                           'increase',
                                           'decrease'))) %>% 
  # filter(R2 > 0.75) %>% 
-  arrange(pse_genome) %>% 
+ # arrange(pse_genome) %>% 
   mutate(noloci = 1:nrow(.)) %>% 
   ggplot(aes(npp, alf, 
              group = loci))+
@@ -486,13 +486,3 @@ ggsave('./figures/fig6_alf_change_real.png',
        alfchangeFig, units = 'cm', height = 8, width = 18, dpi = 300)
 
        
-
-# save data ----------
-m.alfnpp$species <- 'ph'
-m.alfsim$species <- 'ph'
-m.alfnppL1$species <- 'ph'
-dfplot$species <- 'ph'
-saveRDS(list(real = m.alfnpp, sim = m.alfsim,
-             realL1 = m.alfnppL1, alfreal = dfplot),
-        './output/ph_vis_random.rds')
-

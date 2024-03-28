@@ -13,6 +13,20 @@ em.alf_npp_model <- function(a1, iteration){
   
 }
 
+# npp random -----------
+meta <- ph@other$ind.metrics %>% 
+  group_by(period, phaseNo, phase, npp) %>% 
+  summarise(n = n(),
+            ngrids = length(unique(gridId))) %>% 
+  rename(nppTrue = npp)
+random <- meta[,c('phaseNo', 'nppTrue')]  %>% unique()
+
+set.seed(444)
+random$npp <- sample(random$nppTrue, 9); cor(random$nppTrue, random$npp)
+plot(log(npp)~log(nppTrue), data = random)
+random
+meta <- left_join(meta, random)
+
 # real -------
 alfReal <- em.alf_df(ph_phase = ph_phase, meta)
 alfReal
@@ -31,6 +45,7 @@ cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 
 dir.create('/data/scratch/emily/simulations/sy/models')
+
 # sims m -------
 models_nSim <- foreach(i = 1:20) %dopar% {
   library(dartR)
@@ -118,7 +133,7 @@ dfslopes.raw <- bind_rows(m.alfnpp, m.alfsim) %>%
          slope = abs(slope),
          sim_i = round(i))
 
-saveRDS(list(m.alfnpp, m.alfsim), './output/sy_vis_slopes.rds')
+saveRDS(list(m.alfnpp, m.alfsim), './output/sy_vis_random.rds')
 
 
 dfslopes <- bind_rows(m.alfnpp, m.alfsim) %>% 
