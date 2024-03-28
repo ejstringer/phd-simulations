@@ -14,7 +14,7 @@ sim_list <- list.files('/data/scratch/emily/simulations/genlights/')
 
 
 # setup cores -----------------
-ncores <- 27
+ncores <- 20
 cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 tofst <- 1:27
@@ -30,7 +30,7 @@ if(!fstfilename %in% fst_list){
 confilename <- paste0(condir, sub('.rds', '_conditions.csv', filename))
 simAll <- readRDS(paste0(simdir, filename))
 
-print('finish loading file...')
+print(paste('finish loading file...', Sys.time()))
   simFst <- foreach(k = tofst) %dopar% {
     x <- TRUE
     while(x){
@@ -39,7 +39,7 @@ print('finish loading file...')
     } # end while
     fst
   } # end foreach
-  print('finish calculating fsts...')
+  print(paste('finish calculating fsts...', Sys.time()))
 
 saveRDS(simFst, paste0(fstdir, fstfilename))
 
