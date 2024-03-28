@@ -13,8 +13,8 @@ syfst <- readRDS('./output/sy_vis_fst.rds')
 phalf <- readRDS('./output/ph_vis_alf.rds')
 syalf <- readRDS('./output/sy_vis_alf.rds')
 
-phmodel <- readRDS('./output/ph_vis_slopes.rds')
-symodel <- readRDS('./output/sy_vis_slopes.rds')
+phmodel <- readRDS('./output/ph_vis_random.rds')
+symodel <- readRDS('./output/sy_vis_random.rds')
 
 ph <- readRDS('./output/pherm_filtered_genotypes_phases.rds')
 phinit <- read.csv('./output/dataframes/initialise_conditions.csv') %>% 
@@ -68,8 +68,9 @@ simCaps <- ggplot(conditionsx, aes(year, N/48, fill = phase))+
   scale_fill_manual(values = c(phaseCol, initialise = 'grey60'),
                     name = 'Population Phase',
                     labels = c('Low', 'Increase', 'Decrease', 'Sim initialised'))+
-  theme(legend.position = c(0.91,0.75),
+  theme(legend.position = c(0.91,0.76),
         legend.background = element_rect(colour = 'grey'),
+        legend.key.size = unit(0.90, "lines"),
         plot.margin = margin(0.01, 1, 0.01, 0.01, "cm"),
         axis.text.y = element_text(margin = margin(l = 0, r = 2)),
         axis.title.y = element_text(size = 12))+
@@ -80,7 +81,7 @@ simCaps <- ggplot(conditionsx, aes(year, N/48, fill = phase))+
 conditions <- syfst$conditionstb %>% 
   mutate(year = ifelse(year == 0, 0, year - 0.5))
   
-conditionsxy <- bind_rows(conditions[1,],phinit,conditions) 
+conditionsxy <- bind_rows(conditions[1,],syinit,conditions) 
 conditionsxy <- conditionsxy[-1,] %>% 
   left_join(realFst)
 
@@ -88,7 +89,7 @@ simCapsSy <- ggplot(conditionsxy, aes(year, N/48, fill = phase))+
   geom_bar(stat = 'identity', alpha = 0.40, width =0.4) +
   theme_classic() +
   scale_x_continuous(breaks = conditionsxy$year, labels = conditionsxy$gen)+
-  scale_y_continuous(breaks = c(0,50,100))+
+  scale_y_continuous(breaks = c(0,100, 200))+
   scale_fill_manual(values = c(phaseCol, initialise = 'grey60'),
                     name = 'Population Phase',
                     labels = c('Low', 'Increase', 'Decrease', 'Sim initialised'))+
@@ -143,12 +144,12 @@ fx <-conditionstbxx %>%
            phase == 'D' ~ 'decrease'
          ),
          phase = ifelse(duplicated(paste(phaseNo,species)), NA, phase),
-         Nmax = ifelse(duplicated(paste(phaseNo, species)), NA, Nmax),
+         Nmax = ifelse(duplicated(paste(phaseNo, species, Nmax)), NA, Nmax),
          migration = ifelse(duplicated(paste(phaseNo,species)), NA, migration),
          phaseNo= ifelse(duplicated(paste(phaseNo,species)), NA, phaseNo),
          species= ifelse(duplicated(species), NA, species)
   ) %>% 
-  mutate_if(is.numeric, round, digits = 4) %>% 
+  mutate_if(is.numeric, round, digits = 2) %>% 
   #mutate(N = round(N/48)) %>% 
   #dplyr::select(-phaseNo) %>% 
   #relocate(realfst, .before = N) %>% 
@@ -264,7 +265,7 @@ dfs_phase %>%
                                                               alpha = 1)))+
   scale_size_manual(values = c(3,3), guide = 'none')+
  # geom_errorbar(aes(ymin = lower, ymax = upper), width = 0, size = 0.75) +
-  geom_point(aes(size = name), alpha = 0.1)+
+  geom_point(aes(size = name), alpha = 0.08, position = position_dodge(0.5))+
   theme_bw()+
   facet_wrap(~species, ncol = 1)+
   theme(panel.grid = element_blank(),
@@ -286,7 +287,7 @@ ggsave('./figures/fig3_fst_simulations.png',
 
 simAlf <- bind_rows(phalf$nsim,syalf$nsim) %>%
   bind_rows(phalf$sim, syalf$sim) %>% 
-  mutate(species = ifelse(is.na(species), 'S. youngsoni',
+  mutate(species = ifelse(species== 'sy', 'S. youngsoni',
                           'P. hermannsburgensis'),
          type = ifelse(type == 'Sim', 'Simulation', 'n Simulation'),
          type = factor(type, levels = c('Simulation', 'n Simulation')),
@@ -355,7 +356,7 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
                         ncol = 2#, heights = c(5,6)
                         )
   
-  ggsave('./figures/fig4_AF_simulations.png',
+  ggsave('./figures/fig_AF_simulations.png',
          figAF, units = 'cm', height = 8, width = 17, dpi = 600)
   
 # FIG 5 real var -----------------
@@ -363,13 +364,13 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
   realAF <- phalf$real[-1,] %>% 
     bind_rows(syalf$real[-1,]) %>% 
     mutate(name = factor(name, levels =levels(simAlf$name)),
-           species = ifelse(is.na(species), 'S. youngsoni',
+           species = ifelse(species == 'sy', 'S. youngsoni',
                             'P. hermannsburgensis'))
   
   phalf$nsim %>% 
     bind_rows(syalf$nsim) %>% 
   mutate(name = factor(name, levels = levels(simAlf$name)),
-         species = ifelse(is.na(species), 'S. youngsoni',
+         species = ifelse(species == 'sy', 'S. youngsoni',
                           'P. hermannsburgensis')) %>% 
   ggplot(aes(name, vardiff, colour = type, group = i))+
     geom_line(size = 0.3, alpha = 0.2)+
@@ -396,7 +397,7 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
     labs(x ="Population Phases")+
     ylab('Variation of Change in Allele Frquency')-> fig_var;fig_var
 
-  ggsave('./figures/fig5_alf_phaseNo.png',
+  ggsave('./figures/fig4_alf_phaseNo.png',
          fig_var, units = 'cm', height = 16, width = 14, dpi = 300)
   
 # FIG 6 models ------------------
@@ -486,7 +487,7 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
                              labs(tag = 'B)'),
                            heights = c(5,6))
   
-  ggsave('./figures/fig6_model_slopes_npp.png',
+  ggsave('./figures/fig_model_slopes_npp.png',
          slopeFig, units = 'cm', height = 21, width = 16, dpi = 300)
 
   # FIG 7 pherm --------------
@@ -615,7 +616,7 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
                        fig_af_phaseNo +
                          theme(legend.position = 'none'), ncol =1)
   
-  ggsave('./figures/fig7_alf_change_real.png',fig_realAF,
+  ggsave('./figures/fig6_alf_change_real.png',fig_realAF,
          units = 'cm', height = 14, width = 12, dpi = 300)
   
   
@@ -713,7 +714,7 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
          units = 'cm', height = 14, width = 12, dpi = 300)
   
   ## additional histogram of counts ------
-  dfslopes.raw$i[dfslopes.raw$i == 51 & dfslopes.raw$species==
+  dfslopes.raw$i[dfslopes.raw$i == 21 & dfslopes.raw$species==
                    'P. hermannsburgensis'] %>% table
   df2 <- dfslopes.raw$i[dfslopes.raw$slope > outlierSlopes]
   
@@ -721,17 +722,28 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
                             dfslopes.raw$species[dfslopes.raw$slope > outlierSlopes])) 
     
   
-  as.data.frame(table(dfslopes.raw$i, dfslopes.raw$species)) %>% 
-  mutate(type = ifelse(Var1 == 51, 'Real', 'Sim')) %>% 
+  histdata <- as.data.frame(table(dfslopes.raw$i, dfslopes.raw$species)) %>% 
+  mutate(type = ifelse(Var1 == 21, 'Real', 'Sim')) %>% 
     rename(Freq1 = Freq) %>% 
     left_join(df2) %>% 
     pivot_longer(cols = c(Freq1, Freq)) %>% 
     mutate(name = ifelse(name == 'Freq1', 
                          'pvalue < 0.05',
                          'pvalue < 0.05 and slope > 0.021')) %>% 
+    filter(name == 'pvalue < 0.05')
+  table(histdata$name)
+  histdata_REALnpp$npp <- 'real npp'
+  histdata$npp <- 'random npp'
+  as.numeric(as.character(histdata$Var1))[1:10] %% 0.2 
+  bind_rows(histdata, histdata_REALnpp) %>%
+    mutate(sim = as.numeric(as.character(Var1))*100,
+           div5 = sim %% 3,
+           subset = ifelse((div5 == 0),TRUE, FALSE),
+           npp = factor(npp, levels = c('real npp', 'random npp'))) %>% 
+    filter(subset) %>% nrow()
     ggplot(aes(x = value, fill = type, colour = type))+ 
     geom_histogram() + 
-    facet_wrap(Var2~name, scales = 'free_x'#, strip.position = 'bottom'
+    facet_grid(npp~Var2, scales = 'free_x'#, strip.position = 'bottom'
                )+
     scale_fill_manual(values = c('coral2', 'grey70'),
                       name = 'Data')+
@@ -741,14 +753,17 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
     theme(strip.background = element_blank(),
         #  strip.placement = 'outside',
         strip.text.x = element_text(face = 'italic'),
-          legend.position = c(0.9,0.89),
+          legend.position = c(0.9,0.85), 
+        plot.margin = margin(10,10,10,10),
+        legend.key.size = unit(0.5, units = 'cm'),
+        strip.text.y = element_text(face = 'bold', size = 10),
           legend.background = element_rect(colour = 'grey'),
           panel.grid = element_blank())+
     xlab('number of loci (250 simulation subsets)') ->fig_hist
   fig_hist
   
-  ggsave('./figures/figS1_models_loci_count_hist.png',fig_hist,
-         units = 'cm', height = 14, width = 12, dpi = 300)
+  ggsave('./figures/fig5_loci_count_hist.png',fig_hist,
+         units = 'cm', height = 10, width = 13, dpi = 300)
 
   
  
