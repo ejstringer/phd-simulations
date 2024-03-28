@@ -166,11 +166,11 @@ changeReal <- em.alf_change(alfReal, type = 'Real', iteration = 1)%>%
 
 
 # setup cores -----------------
-ncores <- 25
+ncores <- 20
 cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 
-changeSim <- foreach(i = 1:50) %dopar% {
+changeSim <- foreach(i = 1:20) %dopar% {
   library(dartR)
   library(tidyverse)
   print(paste('sim', i, '....Go!!'))
@@ -185,7 +185,7 @@ changeSim <- foreach(i = 1:50) %dopar% {
               vardiff = var(value))
 }
 
-change_nSim <- foreach(i = 1:50) %dopar% {
+change_nSim <- foreach(i = 1:20) %dopar% {
   library(dartR)
   library(tidyverse)
   print(paste('sim', i, '....Go!!'))
@@ -193,7 +193,7 @@ change_nSim <- foreach(i = 1:50) %dopar% {
                          full.names = T)[i]
   simx <- readRDS(fileload)[20:27]
   nSim_list <- list()
- for(j in 1:20) {
+ for(j in 1:50) {
     nsim<- em.sample_sim(samplex, simx)
     nSimalf <- em.alf_df(nsim, meta)
     changenSim <- em.alf_change(nSimalf, type = 'nSim', iteration = j/100)

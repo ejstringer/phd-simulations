@@ -13,6 +13,7 @@ em.alf_npp_model <- function(a1, iteration){
   
 }
 
+dir.create('/data/scratch/emily/simulations/models')
 # real -------
 alfReal <- em.alf_df(ph_phase = ph_phase, meta)
 alfReal
@@ -26,12 +27,12 @@ m.alfnpp$type <- 'Real'
 nrow(m.alfnpp)
 
 # cores- -----
-ncores <- 25
+ncores <- 20
 cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 
 # sims m -------
-models_nSim <- foreach(i = 1:50) %dopar% {
+models_nSim <- foreach(i = 1:20) %dopar% {
   library(dartR)
   library(tidyverse)
   print(paste('sim', i, '....Go!!'))
@@ -39,7 +40,7 @@ models_nSim <- foreach(i = 1:50) %dopar% {
                          full.names = T)[i]
   simx <- readRDS(fileload)[20:27]
   nSim_list <- list()
-  for(j in 1:5) { # can change to more
+  for(j in 1:25) { # can change to more
     nsim<- em.sample_sim(samplex, simx)
     nSimalf <- em.alf_df(nsim, meta)
     
@@ -102,7 +103,7 @@ ggplot(dfslopes, aes(x = type, y = p))+
   theme_bw()+
   theme(panel.grid = element_blank(),
         strip.background = element_blank())
-m.alfnpp$i <- 51
+m.alfnpp$i <- 21
 
 
 # fig 5 ------------------
