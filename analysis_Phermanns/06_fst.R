@@ -14,7 +14,7 @@ sim_list <- list.files('/data/scratch/emily/simulations/genlights/')
 
 
 # setup cores -----------------
-ncores <- 20
+ncores <- 27
 cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 tofst <- 1:27
