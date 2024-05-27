@@ -13,8 +13,11 @@ syfst <- readRDS('./output/sy_vis_fst.rds')
 phalf <- readRDS('./output/ph_vis_alf.rds')
 syalf <- readRDS('./output/sy_vis_alf.rds')
 
-phmodel <- readRDS('./output/ph_vis_random.rds')
-symodel <- readRDS('./output/sy_vis_random.rds')
+phmodelRandom <- readRDS('./output/ph_vis_random.rds')
+symodelRandom <- readRDS('./output/sy_vis_random.rds')
+
+phmodel <- readRDS('./output/ph_vis_slopes.rds')
+symodel <- readRDS('./output/sy_vis_slopes.rds')
 
 ph <- readRDS('./output/pherm_filtered_genotypes_phases.rds')
 phinit <- read.csv('./output/dataframes/initialise_conditions.csv') %>% 
@@ -36,6 +39,8 @@ realFst <- data.frame(realfst = c(0.032,0.017, 0.034, 0.027, 0.005, 0.012, 0.02,
                                         levels = paste0(rep(c('L', 'I', 'D'), 3),
                                                         rep(1:3, each = 3))))
 realFst
+
+
 # FIG 1 conceptual -------
 
 ## captures --------
@@ -722,7 +727,22 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
                             dfslopes.raw$species[dfslopes.raw$slope > outlierSlopes])) 
     
   
-  histdata <- as.data.frame(table(dfslopes.raw$i, dfslopes.raw$species)) %>% 
+  ## slopes ------------------
+  dfslopes.raw2 <- bind_rows(phmodelRandom$real, phmodelRandom$sim) %>% 
+    bind_rows(symodelRandom[[1]]) %>%
+    bind_rows(symodelRandom[[2]]) %>% 
+    filter(pvalue < 0.05,
+           # grepl('01', i) | i == '51'
+           #R2 > 0.8
+    ) %>% 
+    mutate(direction = ifelse(slope < 0, 'negative slope', 'positive slope'),
+           dslope = slope,
+           slope = abs(slope),
+           sim_i = round(i),
+           species = ifelse(is.na(species), 'S. youngsoni',
+                            'P. hermannsburgensis'))
+  
+  histdata_REALnpp <- as.data.frame(table(dfslopes.raw$i, dfslopes.raw$species)) %>% 
   mutate(type = ifelse(Var1 == 21, 'Real', 'Sim')) %>% 
     rename(Freq1 = Freq) %>% 
     left_join(df2) %>% 
@@ -731,7 +751,19 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
                          'pvalue < 0.05',
                          'pvalue < 0.05 and slope > 0.021')) %>% 
     filter(name == 'pvalue < 0.05')
+  
+  histdata <- as.data.frame(table(dfslopes.raw2$i, dfslopes.raw2$species)) %>% 
+    mutate(type = ifelse(Var1 == 21, 'Real', 'Sim')) %>% 
+    rename(Freq1 = Freq) %>% 
+    left_join(df2) %>% 
+    pivot_longer(cols = c(Freq1, Freq)) %>% 
+    mutate(name = ifelse(name == 'Freq1', 
+                         'pvalue < 0.05',
+                         'pvalue < 0.05 and slope > 0.021')) %>% 
+    filter(name == 'pvalue < 0.05')
+  
   table(histdata$name)
+  
   histdata_REALnpp$npp <- 'real npp'
   histdata$npp <- 'random npp'
   as.numeric(as.character(histdata$Var1))[1:10] %% 0.2 
@@ -740,7 +772,7 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
            div5 = sim %% 3,
            subset = ifelse((div5 == 0),TRUE, FALSE),
            npp = factor(npp, levels = c('real npp', 'random npp'))) %>% 
-    filter(subset) %>% nrow()
+    filter(subset) %>%
     ggplot(aes(x = value, fill = type, colour = type))+ 
     geom_histogram() + 
     facet_grid(npp~Var2, scales = 'free_x'#, strip.position = 'bottom'
