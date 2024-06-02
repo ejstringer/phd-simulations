@@ -40,7 +40,65 @@ realFst <- data.frame(realfst = c(0.032,0.017, 0.034, 0.027, 0.005, 0.012, 0.02,
                                                         rep(1:3, each = 3))))
 realFst
 
+# analysis ----------
+## fst ------------
+## regression
+phCor <- phfst$fstphase %>% 
+  ungroup() %>% 
+  group_by(name) %>% 
+  mutate(id = 1:160) %>% 
+  pivot_wider(names_from = name, values_from = value) %>% 
+  filter(complete.cases(fstch2))
 
+syCor <- syfst$fstphase %>% 
+  ungroup() %>% 
+  group_by(name) %>% 
+  mutate(id = 1:160) %>% 
+  pivot_wider(names_from = name, values_from = value) %>% 
+  filter(complete.cases(fstch2))
+
+# numbers
+  cor(phCor$fstch2, phCor$fstphase)
+  cor(syCor$fstch2, syCor$fstphase)
+  lm(fstphase ~ fstch2, data = phCor) %>% summary
+  lm(fstphase ~ fstch2, data = syCor) %>% summary
+# plot  
+  rbind(phCor, syCor) %>% 
+    mutate(species = ifelse(species == 'ph', 'P. hermannsburgensis', 
+                            'S. youngsoni')) %>% 
+  ggplot(aes(fstch2, fstphase, colour = phase))+
+    facet_wrap(~species, scale = 'free')+
+  scale_colour_manual(values = phaseCol) +
+  theme_bw()+
+    geom_abline(slope = 1, intercept = 0,
+                colour = 'pink', lwd = 2, lty =1)+
+  geom_smooth(method = 'lm', colour = 'grey90')+
+  geom_point(size = 3, alpha = 0.5)+
+    theme(strip.background = element_blank(),
+          strip.text = element_text(face = 'italic', size =12),
+          panel.grid = element_line(colour = 'grey97'))
+## alf -----------
+  c(phalf$real$meandiff %>% mean %>% round(.,10),
+  phalf$nsim$meandiff %>% mean %>% round(.,10),
+  phalf$sim$meandiff %>% mean %>% round(.,10), 
+ 
+  syalf$real$meandiff %>% mean %>% round(.,10),
+  syalf$nsim$meandiff %>% mean %>% round(.,10),
+  syalf$sim$meandiff %>% mean %>% round(.,10)) %>% 
+    plot(., pch = 16, col = c('red','pink', 'grey70'))
+  abline(h=0, lty = 3, col = 'black')
+  
+  c(phalf$real$vardiff %>% mean %>% round(.,10),
+    phalf$nsim$vardiff %>% mean %>% round(.,10),
+    phalf$sim$vardiff %>% mean %>% round(.,10), 
+    
+    syalf$real$vardiff %>% mean %>% round(.,10),
+    syalf$nsim$vardiff %>% mean %>% round(.,10),
+    syalf$sim$vardiff %>% mean %>% round(.,10)) %>% 
+    plot(., pch = 16, col = c('red','pink', 'grey70'))
+  abline(h=0, lty = 3, col = 'black')
+
+  
 # FIG 1 conceptual -------
 
 ## captures --------
@@ -178,9 +236,9 @@ rbind(names(fx)[-1], fx[1:19,-1]) %>%
         j = 1:7,
         border = fp_border(color = "grey80",
                            width = 1, style = "dashed")) %>% 
-  bg(j = 1:5, i = which(conditionstb$phase == 'L')+1, bg = muted(phaseCol[1], c = 40, l = 90)) %>% 
-  bg(j = 1:5, i = which(conditionstb$phase == 'I')+1, bg = muted(phaseCol[2], c = 40, l = 90)) %>% 
-  bg(j = 1:5, i = which(conditionstb$phase == 'D')+1, bg = muted(phaseCol[3], c = 40, l = 90)) %>% 
+  bg(j = 1:5, i = which(conditionstb$phase == 'L')+1, bg = scales::muted(phaseCol[1], c = 40, l = 90)) %>% 
+  bg(j = 1:5, i = which(conditionstb$phase == 'I')+1, bg = scales::muted(phaseCol[2], c = 40, l = 90)) %>% 
+  bg(j = 1:5, i = which(conditionstb$phase == 'D')+1, bg = scales::muted(phaseCol[3], c = 40, l = 90)) %>% 
   compose(
     part = "header", 
     value = as_paragraph(('A) '), as_i('P. hermannsburgensis'),
@@ -219,9 +277,9 @@ rbind(names(fx)[-1], fx[20:30,-1]) %>%
         j = 1:7,
         border = fp_border(color = "grey80",
                            width = 1, style = "dashed")) %>% 
-  bg(j = 1:5, i = which(conditionstb$phase == 'L')+1, bg = muted(phaseCol[1], c = 40, l = 90)) %>% 
-  bg(j = 1:5, i = which(conditionstb$phase == 'I')+1, bg = muted(phaseCol[2], c = 40, l = 90)) %>% 
-  bg(j = 1:5, i = which(conditionstb$phase == 'D')+1, bg = muted(phaseCol[3], c = 40, l = 90)) %>% 
+  bg(j = 1:5, i = which(conditionstb$phase == 'L')+1, bg = scales::muted(phaseCol[1], c = 40, l = 90)) %>% 
+  bg(j = 1:5, i = which(conditionstb$phase == 'I')+1, bg = scales::muted(phaseCol[2], c = 40, l = 90)) %>% 
+  bg(j = 1:5, i = which(conditionstb$phase == 'D')+1, bg = scales::muted(phaseCol[3], c = 40, l = 90)) %>% 
   
   compose(
     part = "header", 
@@ -444,6 +502,30 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
   # R2 is not a good way to find loci acting abnormally - ignore it. 
   # use slope and pvalue...?
   
+  ## 3rd quartile ----
+  sppdfslopes.raw <- filter(dfslopes.raw, species == 'P. hermannsburgensis')
+  phq75 <- mean(tapply(sppdfslopes.raw$slope, sppdfslopes.raw$i,
+                function(x) quantile(x, probs = 0.75))[501])
+  
+  sppdfslopes.raw <- filter(dfslopes.raw, species != 'P. hermannsburgensis')
+  syq75 <- mean(tapply(sppdfslopes.raw$slope, sppdfslopes.raw$i,
+                  function(x) quantile(x, probs = 0.75))[501])
+  
+  ## mean slope ---------
+  sppdfslopes.raw <- filter(dfslopes.raw, species == 'P. hermannsburgensis')
+  mslope <- tapply(sppdfslopes.raw$slope, sppdfslopes.raw$i,
+                       mean)
+  
+  mslope[-length(mslope)] %>% summary
+  mslope[length(mslope)]
+  
+  sppdfslopes.raw <- filter(dfslopes.raw, species != 'P. hermannsburgensis')
+  mslope <- tapply(sppdfslopes.raw$slope, sppdfslopes.raw$i,
+                       mean)
+  mslope[-length(mslope)] %>% summary
+  mslope[length(mslope)]
+  
+  
   ## save FIG ----------
   ggplot(dfslopes, aes(x = sim_i, y = s, colour = type))+
     geom_errorbar(aes(ymin = slower, ymax = supper), width = 0)+
@@ -467,6 +549,11 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
   
   ggplot(dfslopes.raw, aes(x = sim_i, y = slope, colour = type,
                            group = sim_i))+
+     geom_hline(data = data.frame(species = c('P. hermannsburgensis',
+                                             'S. youngsoni'),
+                                 slope = c(phq75, syq75),
+                                 type = 'real'),
+               aes(yintercept = slope), lty = 3, colour = 'coral2')+
     geom_boxplot(fill = 'grey90', width = 0.5, size = 0.3, outlier.size = 0.5)+
     facet_grid(rows = vars(species), scale = 'free')+
     theme_bw()+
@@ -480,7 +567,7 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
     scale_color_manual(values = c('grey40', 'coral3'),
                        name = 'Data',
                        labels = c('Simulated', 'Real'))+
-    ylab(expression('Model | '* italic(slope) *' |')) -> slopesDist
+    ylab(expression('Model | '* italic(slope) *' |')) -> slopesDist;slopesDist
   
   
   yleft <- textGrob(expression('Model | '* italic('β'[2]) *' |'), 
@@ -493,17 +580,26 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
                            heights = c(5,6))
   
   ggsave('./figures/fig_model_slopes_npp.png',
-         slopeFig, units = 'cm', height = 21, width = 16, dpi = 300)
+         slopeFig, units = 'cm', height = 21, width = 14, dpi = 300)
 
   # FIG 7 pherm --------------
-  q75 <- tapply(dfslopes.raw$slope, dfslopes.raw$i,
+  sppdfslopes.raw <- filter(dfslopes.raw, species == 'P. hermannsburgensis')
+  q75 <- tapply(sppdfslopes.raw$slope, sppdfslopes.raw$i,
                 function(x) quantile(x, probs = 0.75))
   
   q75[-length(q75)] %>% summary
-  q75[length(q75)] %>% mean
+  q75[length(q75)]
   
-  outlierSlopes <- quantile(q75[-length(q75)], probs = 0.75)
-  ## data  ------------
+  outlierSlopes <- mean(q75[-length(q75)]) #quantile(q75[-length(q75)], probs = 0.75)
+  
+  ## extra outliers -----
+  sum(phmodel$realL1$pvalue < 0.05)
+  sum(phmodel$real$pvalue < 0.05)
+  sum(phmodel$real$loci[phmodel$real$pvalue < 0.05] %in% phmodel$realL1$loci[phmodel$realL1$pvalue < 0.05])
+  
+  
+  
+    ## data  ------------
   outliers_withoutL1 <- phmodel$real %>% mutate(abslope = abs(slope)) %>% 
     filter(abslope > outlierSlopes, pvalue < 0.05) %>% 
     dplyr::select(loci) %>% unlist
@@ -540,7 +636,8 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
     # filter(R2 > 0.75) %>% 
     arrange(pse_genome) %>% 
     mutate(noloci = 1:nrow(.))
-  
+  ## n loci ------
+  dfplot$loci %>% unique %>% length
   ## Af phase ------
   phaseColour <- phaseCol
   names(phaseColour) <- c('low','increase','decrease')
@@ -798,4 +895,131 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
          units = 'cm', height = 10, width = 13, dpi = 300)
 
   
+  # Real npp Hist -------------
+  
+  histdata_REALnpp %>%
+    mutate(sim = as.numeric(as.character(Var1))*100,
+           div5 = sim %% 3,
+           subset = ifelse((div5 == 0),TRUE, FALSE),
+           npp = factor(npp, levels = c('real npp', 'random npp'))) %>% 
+    filter(subset) %>%
+    ggplot(aes(x = value, fill = type, colour = type))+ 
+    geom_histogram() + 
+    facet_grid(npp~Var2, scales = 'free_x'#, strip.position = 'bottom'
+    )+
+    scale_fill_manual(values = c('coral2', 'grey70'),
+                      name = 'Data')+
+    scale_colour_manual(values = c('coral2', 'black'),
+                        name = 'Data')+
+    theme_bw()+
+    theme(strip.background = element_blank(),
+          #  strip.placement = 'outside',
+          strip.text.x = element_text(face = 'italic'),
+          legend.position = c(0.92,0.83), 
+          plot.margin = margin(10,10,10,10),
+          legend.key.size = unit(0.3, units = 'cm'),
+          legend.text = element_text(size = 8),
+          strip.text.y = element_blank(),#element_text(face = 'bold', size = 10),
+          legend.background = element_rect(colour = 'grey'),
+          panel.grid = element_blank())+
+    xlab('number of loci with p-values < 0.05') ->fig_hist2
+  fig_hist2
+  
+  ggsave('./figures/fig5_loci_count_hist_real.png',fig_hist2,
+         units = 'cm', height = 8, width = 13, dpi = 300)
+  
  
+  ## 95% n pvalues --------------
+ m <- mean(histdata_REALnpp$value[1:500])
+ s <- sd(histdata_REALnpp$value[1:500])
+ x <- histdata_REALnpp$value[501]
+q <- qnorm(0.95, mean = m, sd = s)
+x-q
+pnorm(x, mean = m, sd = s)
+(x-m)/s
+max(histdata_REALnpp$value[1:500])
+
+m <- mean(histdata_REALnpp$value[502:1001])
+s <- sd(histdata_REALnpp$value[502:1001])
+x <- histdata_REALnpp$value[1002]
+qnorm(0.95, mean = m, sd = s)
+pnorm(x, mean = m, sd = s)
+(x-m)/s
+
+## loci position -----------
+candidates <- dfplot %>% 
+  dplyr::select(loci, slope, mus_genome, mus_position,
+                pse_genome, Pse_position, scaffold, position) %>%
+  unique(.) %>% 
+  filter(mus_position != 0 | Pse_position != 0)
+
+loctb <- table(candidates$scaffold)[-1]
+allloctb <- table(locmeta$scaffold[locmeta$scaffold %in% as.numeric(names(loctb))])
+
+moreless <- sort((loctb/sum(loctb))/(allloctb/sum(allloctb)))
+moreless
+
+candidates %>% filter(scaffold %in% 16:17) %>% arrange(scaffold, Pse_position)
+
+
+### PLOT -----
+dfplot %>% 
+  filter(scaffold %in% c(16:17, 24,1, 4)) %>%
+  ggplot(aes(phaseNo, alf, colour = position, group = loci)) +
+  #geom_smooth(method = 'lm', colour = 'grey50', se = T) +
+  geom_line(size = 0.5, alpha = 0.5)+
+  #geom_hline(yintercept = c(0,1), colour = 'grey', lty = 3)+
+  # geom_boxplot(aes(group = phaseNo, fill = phase), 
+  #              colour = 'grey50',
+  #              alpha = 0.5, width = 0.1, size = 0.4)+#
+  facet_grid(~scaffold)+
+  geom_point(size = 2, alpha = 0.5, aes(group = phaseNo))+
+  # facet_wrap(~direction, ncol = 1, scale = 'free')+
+  # guides(alpha='none',
+  #        colour = guide_legend(override.aes = list(linewidth=1)))+
+  scale_colour_gradient2(low = 'orange', mid = 'yellow', high = 'hotpink')+
+  theme_bw()+
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0))+
+  theme(panel.grid = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks.x = element_blank(),
+        #axis.text.x = element_text(colour = 'grey50'),
+        axis.ticks.length.y = unit(0.3, units = 'cm'),
+        axis.line.y = element_line(colour = 'black'),
+        strip.background = element_blank(),
+     #   strip.text = element_blank(),
+        axis.title.x = element_blank())+
+  ylab('Allele Frequency')+
+  xlab('Population phase #')
+
+# alf cor --------
+candidates %>% filter(scaffold %in% 17) %>% 
+       arrange(scaffold, Pse_position) %>% 
+       select(loci, position)# %>% dist
+
+
+dfplot %>% 
+  filter(scaffold %in% 16:17, 
+         position %in% c(60213862, 47918793)) %>% 
+  mutate(loci.n = ifelse(position == 60213862, 'loci2', 'loci1')) %>% 
+  dplyr::select(loci.n, alf, phase, phaseNo, species) %>% 
+  pivot_wider(names_from = loci.n, values_from = alf) %>% 
+#  lm(loci1 ~ loci2, data = .) %>% summary
+  ggplot(aes(loci1, loci2)) +
+  geom_smooth(method = 'lm', colour = 'grey50', se = T) +
+  #geom_line(size = 0.5, alpha = 0.5)+
+  geom_point(size = 2, alpha = 0.5)+
+  theme_bw()+
+#  scale_y_continuous(limits = c(0, 1), expand = c(0, 0))+
+  theme(panel.grid = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks.x = element_blank(),
+        #axis.text.x = element_text(colour = 'grey50'),
+        axis.ticks.length.y = unit(0.3, units = 'cm'),
+        axis.line.y = element_line(colour = 'black'),
+        strip.background = element_blank(),
+        #   strip.text = element_blank(),
+        axis.title.x = element_blank())+
+  ylab('Allele Frequency')+
+  xlab('Population phase #')
+
