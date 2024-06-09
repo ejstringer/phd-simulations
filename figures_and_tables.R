@@ -323,17 +323,18 @@ dfs_phase %>%
   geom_hline(yintercept = 0.005, colour = 'grey', lty = 2)+
   scale_color_manual(values = c('coral3', 'grey50'),
                      name = NULL,
-                     labels = c('Observed Fst', 'Simulated Fst'),
+                     labels = c('Observed Fst', expression('Simulated Fst \n (replicate runs)')),
                      guide = guide_legend(override.aes = list(size = c(3,3),
                                                               alpha = 1)))+
   scale_size_manual(values = c(3,3), guide = 'none')+
  # geom_errorbar(aes(ymin = lower, ymax = upper), width = 0, size = 0.75) +
-  geom_point(aes(size = name), alpha = 0.08, position = position_dodge(0.5))+
+  geom_point(aes(size = name), alpha = 0.4, position = position_dodge(0.5))+
   theme_bw()+
   facet_wrap(~species, ncol = 1)+
   theme(panel.grid = element_blank(),
         strip.background = element_blank(),
         legend.position = c(0.85,0.35),
+        legend.text.align = 0,
         legend.background = element_rect(colour = 'grey'),
         axis.title = element_text(size = 13),
         strip.text.x = element_text(face = 'italic', size = 11),
@@ -341,7 +342,7 @@ dfs_phase %>%
   )+
   ylim(0,0.04)+
   ylab(expression(italic('F')[ST]))+
-  xlab('population phase #') -> figb;figb
+  xlab('Sampling period') -> figb;figb
 
 ggsave('./figures/fig3_fst_simulations.png',
        figb, units = 'cm', height = 14, width = 14, dpi = 600)
