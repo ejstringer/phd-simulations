@@ -40,6 +40,10 @@ realFst <- data.frame(realfst = c(0.032,0.017, 0.034, 0.027, 0.005, 0.012, 0.02,
                                                         rep(1:3, each = 3))))
 realFst
 
+phaseCol <- c(L = terrain.colors(10)[7],
+              I = terrain.colors(10)[1],
+              D = terrain.colors(10)[4])
+
 # analysis ----------
 ## fst ------------
 ## regression
@@ -106,9 +110,6 @@ con <- em.conceptual_phase('2007-01-01', c(0.24, 0.507,0.68), syoung = F)
 conSy <- em.conceptual_phase('2007-01-01', c(0.24, 0.507,0.68), syoung = T) 
 #  theme(legend.position = 'none')
 
-phaseCol <- c(L = terrain.colors(10)[7],
-              I = terrain.colors(10)[1],
-              D = terrain.colors(10)[4])
 
 ## sim N ------------
 ### ph -------
@@ -598,7 +599,15 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
   sum(phmodel$real$pvalue < 0.05)
   sum(phmodel$real$loci[phmodel$real$pvalue < 0.05] %in% phmodel$realL1$loci[phmodel$realL1$pvalue < 0.05])
   
-  
+  ## 95% slopes 
+  simslopes <- filter(dfslopes.raw, species == 'P. hermannsburgensis',
+                      type != 'Real')
+ 
+ # outlierSlopes <- mean(simslopes$slope) + sd(simslopes$slope)*2
+  sum(phmodel$real$loci[abs(phmodel$real$slope) > outlierSlopes &
+                          phmodel$real$pvalue < 0.05] %in% 
+      phmodel$realL1$loci[abs(phmodel$realL1$slope) > outlierSlopes &
+                            phmodel$realL1$pvalue < 0.05])
   
     ## data  ------------
   outliers_withoutL1 <- phmodel$real %>% mutate(abslope = abs(slope)) %>% 
@@ -952,15 +961,75 @@ candidates <- dfplot %>%
   dplyr::select(loci, slope, mus_genome, mus_position,
                 pse_genome, Pse_position, scaffold, position) %>%
   unique(.) %>% 
-  filter(mus_position != 0 | Pse_position != 0)
+  filter(#mus_position != 0 | 
+           Pse_position != 0)
 
-loctb <- table(candidates$scaffold)[-1]
-allloctb <- table(locmeta$scaffold[locmeta$scaffold %in% as.numeric(names(loctb))])
 
-moreless <- sort((loctb/sum(loctb))/(allloctb/sum(allloctb)))
-moreless
 
-candidates %>% filter(scaffold %in% 16:17) %>% arrange(scaffold, Pse_position)
+
+loctb <- table(candidates$scaffold)#[-1]all <- 
+locmeta_scaff <- locmeta %>% 
+  filter(scaffold %in% as.numeric(names(loctb)),
+         uid %in% phmodel$real$uid,
+         #mus_position != 0 | 
+         Pse_position != 0)
+nSNP <- 24388
+allloctb <- table(locmeta_scaff$scaffold)
+
+nSNPprob <- (allloctb/nSNP)
+
+em.likelyhood <- function(p, n, obs){
+  precision <- 100000
+  xx <- sapply(1:precision, function(x) sum(sample(0:1,
+                                               n, prob = c(1-p, p), 
+                                               replace = T)))
+  sum(xx > obs)/precision
+}
+   
+nSNPexp <- round(nSNPprob * nrow(candidates),1)
+expdiff <- loctb - nSNPexp
+expdiff[expdiff>0]
+mean(expdiff)
+
+dfscaff <- as.data.frame(allloctb, responseName = 'Total') %>% 
+  rename(Scaffold = Var1) %>% 
+    mutate(Prob = nSNPprob, Expected = nSNPexp, Observed = unname(loctb),
+           Difference = unname(expdiff))
+for (i in 1:nrow(dfscaff)) {
+  dfscaff$Proportion[i] <- round(em.likelyhood(dfscaff$Prob[i],
+                                         nrow(candidates),
+                                         dfscaff$Observed[i]), 3)
+}
+dfscaff$Corrected <- round(p.adjust(dfscaff$Proportion, method = 'fdr'),3)
+
+  flextable(dfscaff[,-c(2,3,6,7)]) %>% 
+  autofit() %>% 
+  border_remove() %>% 
+    color(i = which(dfscaff$Corrected < 0.05), j = 1,color = 'coral') %>% 
+    bold(i =  which(dfscaff$Corrected < 0.05), j = 1) %>% 
+    align(j = 1, align = 'center') %>% 
+    hline(part = 'header',
+    border = fp_border(color = "grey50",
+                       width = 3, style = "solid")) %>% 
+    hline(i = nrow(dfscaff),
+          border = fp_border(color = "grey50",
+                             width = 4, style = "solid")) %>% 
+    vline(j = 1, part = 'body',
+          border = fp_border(color = "grey70",
+                             width = 2, style = "solid")) %>% 
+  bg(i = which(dfscaff$Corrected < 0.05), j = 2:4, bg = 'mistyrose') %>%
+    compose(part = 'header', j = 4,
+            value = as_paragraph(('p-value'), as_sub(' fdr'))) ->fxtbScaff;fxtbScaff
+
+### save fx -----
+  flextable::save_as_docx(fxtbScaff,
+                          path = './figures/scaffold_candidate_loci.docx')
+  
+  
+
+
+candidates %>% filter(scaffold %in% 16:18) %>% 
+  arrange(scaffold, Pse_position)
 
 
 ### PLOT -----
