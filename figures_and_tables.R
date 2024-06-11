@@ -642,7 +642,8 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
            phase = factor(phase, levels = c('low',
                                             'increase',
                                             'decrease'))) %>%
-    filter(phase != 'decrease2') %>% 
+    filter(phase != 'decrease2',
+           Pse_position != 0) %>% 
     # filter(R2 > 0.75) %>% 
     arrange(pse_genome) %>% 
     mutate(noloci = 1:nrow(.))
@@ -967,7 +968,7 @@ candidates <- dfplot %>%
 
 
 
-loctb <- table(candidates$scaffold)#[-1]all <- 
+loctb <- table(candidates$scaffold)#[-1]
 locmeta_scaff <- locmeta %>% 
   filter(scaffold %in% as.numeric(names(loctb)),
          uid %in% phmodel$real$uid,
@@ -1000,7 +1001,7 @@ for (i in 1:nrow(dfscaff)) {
                                          nrow(candidates),
                                          dfscaff$Observed[i]), 3)
 }
-dfscaff$Corrected <- round(p.adjust(dfscaff$Proportion, method = 'fdr'),3)
+dfscaff$Corrected <- round(p.adjust(dfscaff$Proportion, method = 'fdr'),2)
 
   flextable(dfscaff[,-c(2,3,6,7)]) %>% 
   autofit() %>% 
@@ -1019,14 +1020,11 @@ dfscaff$Corrected <- round(p.adjust(dfscaff$Proportion, method = 'fdr'),3)
                              width = 2, style = "solid")) %>% 
   bg(i = which(dfscaff$Corrected < 0.05), j = 2:4, bg = 'mistyrose') %>%
     compose(part = 'header', j = 4,
-            value = as_paragraph(('p-value'), as_sub(' fdr'))) ->fxtbScaff;fxtbScaff
+            value = as_paragraph(('p-value'), as_sub(' FDR'))) ->fxtbScaff;fxtbScaff
 
 ### save fx -----
   flextable::save_as_docx(fxtbScaff,
                           path = './figures/scaffold_candidate_loci.docx')
-  
-  
-
 
 candidates %>% filter(scaffold %in% 16:18) %>% 
   arrange(scaffold, Pse_position)
@@ -1093,3 +1091,43 @@ dfplot %>%
   ylab('Allele Frequency')+
   xlab('Population phase #')
 
+
+
+# Standardise alf change --------------
+dfplotL1 <- dfplot %>% filter(phaseNo == 'L1') %>% 
+  dplyr::select(alf, loci) %>% 
+  rename(alfstart = alf)
+
+dfplot %>% 
+  left_join(dfplotL1) %>% 
+  mutate(alf_standard = alf - alfstart) %>%
+  filter(scaffold %in% 16) %>% 
+ggplot(aes(phaseNo, alf_standard, colour = phase, group = loci)) +
+  #geom_smooth(method = 'lm', colour = 'grey50', se = T) +
+  geom_line(size = 0.5, alpha = 0.5)+
+  #geom_hline(yintercept = c(0,1), colour = 'grey', lty = 3)+
+  # geom_boxplot(aes(group = phaseNo, fill = phase), 
+  #              colour = 'grey50',
+  #              alpha = 0.5, width = 0.1, size = 0.4)+#
+  geom_point(size = 1, alpha = 0.5, aes(group = phaseNo))+
+  # facet_wrap(~direction, ncol = 1, scale = 'free')+
+  scale_colour_manual(values = phaseColour,#rep('grey',3),
+                      # labels = c('low to increase',
+                      #            'increase to decrease',
+                      #            'decrease to low'),
+                      name = 'Phase')+
+  guides(alpha='none',
+         colour = guide_legend(override.aes = list(linewidth=1)))+
+  theme_bw()+
+  facet_wrap(~pse_genome, ncol = 1)+
+  #scale_y_continuous(expand = c(0, 0))+
+  theme(panel.grid = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks.x = element_blank(),
+        #axis.text.x = element_text(colour = 'grey50'),
+        axis.ticks.length.y = unit(0.3, units = 'cm'),
+        axis.line.y = element_line(colour = 'black'),
+        strip.background = element_blank(),
+        axis.title.x = element_blank())+
+  ylab('Allele Frequency')+
+  xlab('Population phase #') -> fig_af_phaseNo;fig_af_phaseNo
