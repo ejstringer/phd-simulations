@@ -1131,3 +1131,15 @@ ggplot(aes(phaseNo, alf_standard, colour = phase, group = loci)) +
         axis.title.x = element_blank())+
   ylab('Allele Frequency')+
   xlab('Population phase #') -> fig_af_phaseNo;fig_af_phaseNo
+
+# % change ---------
+npp <- read.csv('./output/dataframes/npp_means.csv')
+phmodel$realL1 %>% 
+  mutate(slope = abs(slope)) %>% 
+  arrange(desc(slope)) %>% 
+  filter(slope > 0.019) %>% 
+  summarise(slope = median(slope))
+
+(0.049*log(173)+  0.09525377)-
+(0.049*log(15)+  0.09525377)
+
