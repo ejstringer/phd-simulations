@@ -455,15 +455,15 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
           plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"))+
     scale_colour_manual(values = c('grey50', 'coral3'),  #viridis_pal()(10)[c(4,1,7)],
                         labels = c(expression({}*italic(n)~textstyle(group("", Simulated, ""))),
-                                   'Real',
+                                   'Empirical',
                                    'Simulated'),
                         name = 'Data')+
   #  scale_x_discrete(labels = sub('_', ' - ', changeReal$name[-1]))+
     labs(x ="Population Phases")+
     ylab('Variation of Change in Allele Frquency')-> fig_var;fig_var
 
-  #ggsave('./figures/fig4_alf_phaseNo.png',
-  #       fig_var, units = 'cm', height = 16, width = 14, dpi = 300)
+  ggsave('./figures/fig4_alf_phaseNo.png',
+         fig_var, units = 'cm', height = 16, width = 14, dpi = 300)
   
 # FIG 6 models ------------------
   
@@ -920,8 +920,10 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
     facet_grid(npp~Var2, scales = 'free_x'#, strip.position = 'bottom'
     )+
     scale_fill_manual(values = c('coral2', 'grey70'),
+                      labels = c('Empir.', 'Sim.'),
                       name = 'Data')+
     scale_colour_manual(values = c('coral2', 'black'),
+                        labels = c('Empir.', 'Sim.'),
                         name = 'Data')+
     theme_bw()+
     theme(strip.background = element_blank(),
@@ -939,7 +941,7 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
   fig_hist2
   
   ggsave('./figures/fig5_loci_count_hist_real.png',fig_hist2,
-         units = 'cm', height = 8, width = 13, dpi = 300)
+         units = 'cm', height = 8, width = 14, dpi = 300)
   
  
   ## 95% n pvalues --------------
