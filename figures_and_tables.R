@@ -324,7 +324,8 @@ dfs_phase %>%
   geom_hline(yintercept = 0.005, colour = 'grey', lty = 2)+
   scale_color_manual(values = c('coral3', 'grey50'),
                      name = NULL,
-                     labels = c('Observed Fst', expression('Simulated Fst \n (replicate runs)')),
+                     labels = c('Observed', 
+                                expression('Simulated')),
                      guide = guide_legend(override.aes = list(size = c(3,3),
                                                               alpha = 1)))+
   scale_size_manual(values = c(3,3), guide = 'none')+
@@ -345,8 +346,8 @@ dfs_phase %>%
   ylab(expression(italic('F')[ST]))+
   xlab('Sampling period') -> figb;figb
 
-#ggsave('./figures/fig3_fst_simulations.png',
-#       figb, units = 'cm', height = 14, width = 14, dpi = 600)
+ggsave('./figures/fig3_fst_simulations.png',
+      figb, units = 'cm', height = 14, width = 14, dpi = 600)
 
 # FIG 4 alf -----------
 
@@ -445,7 +446,7 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
     theme_bw()+
     scale_x_discrete(labels = sub('_', ' - ', levels(simAlf$name)))+
     facet_wrap(~species, ncol = 1,scale = 'free')+
-    theme(legend.position = c(0.85,0.85),
+    theme(legend.position = c(0.85,0.90),
           legend.background = element_rect(colour = 'grey'),
           panel.grid = element_blank(),
           strip.background = element_blank(),
@@ -464,7 +465,7 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
 
   ggsave('./figures/fig4_alf_phaseNo.png',
          fig_var, units = 'cm', height = 16, width = 14, dpi = 300)
-  
+  # 
 # FIG 6 models ------------------
   
   
@@ -940,9 +941,9 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
     ylab('Count')->fig_hist2
   fig_hist2
   
-  ggsave('./figures/fig5_loci_count_hist_real.png',fig_hist2,
-         units = 'cm', height = 8, width = 14, dpi = 300)
-  
+  # ggsave('./figures/fig5_loci_count_hist_real.png',fig_hist2,
+  #        units = 'cm', height = 8, width = 14, dpi = 300)
+  # 
  
   ## 95% n pvalues --------------
  m <- mean(histdata_REALnpp$value[1:500])
