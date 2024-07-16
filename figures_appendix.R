@@ -118,7 +118,7 @@ dfs_phaseData_Phermann %>%
   geom_hline(yintercept = 0.034, colour = 'grey', lty = 2)+
   geom_hline(yintercept = 0.005, colour = 'grey', lty = 2)+
   
-  scale_color_manual(values = c('black', 'yellow','orange', 'red'),
+  scale_color_manual(values = c('black', 'yellow2','orange', 'red'),
                      name = 'Scenario',
                      labels = c('Observed', 'Simulated step 1', 'Simulated step 2','Simulated step 3'),
                      guide = guide_legend(override.aes = list(size = c(3,4,3,2),
@@ -143,5 +143,5 @@ dfs_phaseData_Phermann %>%
   ylab(expression(italic('F')[ST]))+
   xlab('Sampling period') -> figb;figb
 
-ggsave('./figures/figS1_fst_simulation_scenarios.png',
-       figb, units = 'cm', height = 14, width = 12, dpi = 300)
+#ggsave('./figures/figS1_fst_simulation_scenarios.png',
+#       figb, units = 'cm', height = 14, width = 12, dpi = 300)

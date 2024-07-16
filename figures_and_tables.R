@@ -1,17 +1,20 @@
 
-source('./code/libraries.R')
+source('./code/libraries.R') # change library locations
 source('./functions_figures_tables.R')
 # source('./code/functions_conceptual.R')
  source('./code/functions_genetic-data-creation.R')
 
 # load ------------
-phases <- readRDS('./output/phase_df.rds')
+# dataframes created for plotting and analysing 
+phases <- readRDS('./output/phase_df.rds') # population phases
 
-phfst <- readRDS('./output/ph_vis_fst.rds')
-syfst <- readRDS('./output/sy_vis_fst.rds')
+phfst <- readRDS('./output/ph_vis_fst.rds') # ph = P. hermmansburgensis
+syfst <- readRDS('./output/sy_vis_fst.rds') # sy = S. youngsoni
+                                            # vis = visualise
 
 phalf <- readRDS('./output/ph_vis_alf.rds')
 syalf <- readRDS('./output/sy_vis_alf.rds')
+
 
 phmodelRandom <- readRDS('./output/ph_vis_random.rds')
 symodelRandom <- readRDS('./output/sy_vis_random.rds')
@@ -89,8 +92,10 @@ syCor <- syfst$fstphase %>%
   syalf$real$meandiff %>% mean %>% round(.,10),
   syalf$nsim$meandiff %>% mean %>% round(.,10),
   syalf$sim$meandiff %>% mean %>% round(.,10)) %>% 
-    plot(., pch = 16, col = c('red','pink', 'grey70'))
-  abline(h=0, lty = 3, col = 'black')
+    plot(., pch = 16, col = c('red','pink', 'grey70')) # index 1-3 is ph, 4-6 is sy 
+  abline(h=0, lty = 3, col = 'black')                  # red = empirical data
+                                                       # pink = sampled sim
+                                                       # grey = full sim
   
   c(phalf$real$vardiff %>% mean %>% round(.,10),
     phalf$nsim$vardiff %>% mean %>% round(.,10),
@@ -99,11 +104,11 @@ syCor <- syfst$fstphase %>%
     syalf$real$vardiff %>% mean %>% round(.,10),
     syalf$nsim$vardiff %>% mean %>% round(.,10),
     syalf$sim$vardiff %>% mean %>% round(.,10)) %>% 
-    plot(., pch = 16, col = c('red','pink', 'grey70'))
-  abline(h=0, lty = 3, col = 'black')
+    plot(., pch = 16, col = c('red','pink', 'grey70'))# index 1-3 is ph, 4-6 is sy 
+  abline(h=0, lty = 3, col = 'black') 
 
   
-# FIG 1 conceptual -------
+# FIG conceptual -------
 
 ## captures --------
 con <- em.conceptual_phase('2007-01-01', c(0.24, 0.507,0.68), syoung = F) 
@@ -180,7 +185,7 @@ fig1 <- grid.arrange(con +theme(legend.position = 'none')+
 
 #ggsave('./figures/fig1_captures_sim.png',fig1,  units = 'cm',
 #       height = 21, width = 16, dpi = 300)
-# TABLE 1 ---------
+# TABLE generations ---------
 realFst$realfst %>% sprintf("%f0", .)
 
 ### ph ---------
@@ -304,12 +309,12 @@ rbind(names(fx)[-1], fx[20:30,-1]) %>%
   align(j = 4:5, align = 'center') %>% 
   align(j = c(3,6), align = 'left') ->fxtbSy;fxtbSy 
 
-## save FIG -------
+## save table -------
 # flextable::save_as_docx(fxtb,fxtbSy,
 #                         path = './figures/generation_conditions.docx')
 
 
-# FIG 3 fst ---------------
+# FIG fst ---------------
 realFst$name <- 'fstch2'
 dfs_phase <- bind_rows(phfst$fstphase,
                        syfst$fstphase) %>% 
@@ -346,10 +351,10 @@ dfs_phase %>%
   ylab(expression(italic('F')[ST]))+
   xlab('Sampling period') -> figb;figb
 
-ggsave('./figures/fig3_fst_simulations.png',
-      figb, units = 'cm', height = 14, width = 14, dpi = 600)
+#ggsave('./figures/fig3_fst_simulations.png',
+#      figb, units = 'cm', height = 14, width = 14, dpi = 600)
 
-# FIG 4 alf -----------
+# FIG alf -----------
 
 simAlf <- bind_rows(phalf$nsim,syalf$nsim) %>%
   bind_rows(phalf$sim, syalf$sim) %>% 
@@ -366,66 +371,7 @@ simAlf <- bind_rows(phalf$nsim,syalf$nsim) %>%
          )) %>% 
   filter(type == 'Simulation')
 
-ggplot(simAlf, aes(species, meandiff, fill = type)) +
-  theme_bw()+
-  geom_hline(yintercept = 0,lty = 2, colour = 'grey50')+
-  geom_boxplot(outlier.size = 0.5)+
-  guides(colour = 'none')+
- # facet_wrap(~type, scale = 'free_y', ncol = 2)+
-  scale_colour_manual(values = rep('black', 7))+
-  scale_fill_manual(values = c('grey70', 'grey90'))+
-  theme(legend.position = 'none',#c(0.85,0.8),
-        panel.grid = element_blank(),
-        strip.background = element_blank(),
-        legend.background = element_rect(colour = 'grey'),
-        #axis.title = element_text(size = 13),
-        axis.title.x = element_blank(),
-        strip.text.x = element_text(size = 11),
-        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
-        axis.text.x = element_text(face = 'italic'),
-        axis.text.y = element_text(margin = margin(l = 3, r = 2))
-  )+
-  ylab(expression('Mean Change in AF'))+
-  scale_y_continuous(
-    labels = scales::number_format(accuracy = 0.00001,
-                                   decimal.mark = '.'))+
-  xlab('Sampling Phase') -> meanAF 
-
-  ggplot(simAlf, aes(species, vardiff, fill = type)) +
-  theme_bw()+
-  geom_hline(yintercept = 0,lty = 2, colour = 'grey50')+
-  geom_boxplot(outlier.size = 0.5)+
-  guides(colour = 'none')+
-#  facet_wrap(~type, scale = 'free_y', ncol = 2)+
-  scale_colour_manual(values = rep('black', 7))+
-  scale_fill_manual(values = c('grey70', 'grey90'))+#virid(10)[c(5, 10)])+
-  theme(legend.position = 'none',#c(0.85,0.8),
-        panel.grid = element_blank(),
-        strip.background = element_blank(),
-        legend.background = element_rect(colour = 'grey'),
-        #axis.title = element_text(size = 13),
-        axis.title.x = element_blank(),
-        strip.text.x = element_text(face = 'italic', size = 11),
-        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
-        axis.text.x = element_text(face = 'italic'),
-        axis.text.y = element_text(margin = margin(l = 7, r = 2))
-  )+
-  ylab(expression('Variance of Change in AF'))+
-  scale_y_continuous(
-    labels = scales::number_format(accuracy = 0.00001,
-                                   decimal.mark = '.'))+
-  xlab('simulation')->varAF
-## save FIG -------------------
-  figAF <- grid.arrange(meanAF+ labs(tag = 'A)'), #+ theme(axis.text.x = element_blank()),
-                        varAF + labs(tag = 'B)')+
-                          theme(strip.text.x = element_blank()),
-                        ncol = 2#, heights = c(5,6)
-                        )
-  
-  #ggsave('./figures/fig_AF_simulations.png',
-  #       figAF, units = 'cm', height = 8, width = 17, dpi = 600)
-  
-# FIG 5 real var -----------------
+## real var -----------------
   
   realAF <- phalf$real[-1,] %>% 
     bind_rows(syalf$real[-1,]) %>% 
@@ -463,10 +409,10 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
     labs(x ="Population Phases")+
     ylab('Variation of Change in Allele Frquency')-> fig_var;fig_var
 
-  ggsave('./figures/fig4_alf_phaseNo.png',
-         fig_var, units = 'cm', height = 16, width = 14, dpi = 300)
+  #ggsave('./figures/fig4_alf_phaseNo.png',
+  #       fig_var, units = 'cm', height = 16, width = 14, dpi = 300)
   # 
-# FIG 6 models ------------------
+# FIG model slopes ------------------
   
   
   ## slopes ------------------
@@ -585,7 +531,7 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
   #ggsave('./figures/fig_model_slopes_npp.png',
    #      slopeFig, units = 'cm', height = 21, width = 14, dpi = 300)
 
-  # FIG 7 pherm --------------
+  # FIG pherm outliers --------------
   sppdfslopes.raw <- filter(dfslopes.raw, species == 'P. hermannsburgensis')
   q75 <- tapply(sppdfslopes.raw$slope, sppdfslopes.raw$i,
                 function(x) quantile(x, probs = 0.75))
@@ -645,7 +591,8 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
                                             'increase',
                                             'decrease'))) %>%
     filter(phase != 'decrease2',
-           Pse_position != 0) %>% 
+           #Pse_position != 0
+           ) %>% 
     # filter(R2 > 0.75) %>% 
     arrange(pse_genome) %>% 
     mutate(noloci = 1:nrow(.))
@@ -734,101 +681,8 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
   #ggsave('./figures/fig6_alf_change_real.png',fig_realAF,
   #       units = 'cm', height = 14, width = 12, dpi = 300)
   
-  
-  ## simplified -----
-  R2threshold <- 0.78
-  dfplot %>% 
-    filter(R2 > R2threshold) %>% select(loci) %>% table
-  lociID <- dfplot$loci[which(dfplot$alf < 0.5 & dfplot$alf > 0.25 & dfplot$phaseNo == 'L1')]
-  
-  dfplot %>% 
-    filter(R2 > R2threshold) %>% 
-  ggplot(aes(phaseNo, alf, colour = phase, group = loci)) +
-    #geom_smooth(method = 'lm', colour = 'grey50', se = T) +
-    geom_line(size = 1, alpha = 0.95)+
-    #geom_hline(yintercept = c(0,1), colour = 'grey', lty = 3)+
-    # geom_boxplot(aes(group = phaseNo, fill = phase), 
-    #              colour = 'grey50',
-    #              alpha = 0.5, width = 0.1, size = 0.4)+#
-  #  geom_point(size = 2, alpha = 0.5, aes(group = phaseNo))+
-    # facet_wrap(~direction, ncol = 1, scale = 'free')+
-    scale_colour_manual(values = unname(phaseColour)[c(2,3,1)],#rep('grey',3),
-                        # labels = c('low to increase', 
-                        #            'increase to decrease',
-                        #            'decrease to low'),
-                        name = 'Phase')+
-    guides(alpha='none',
-           colour = guide_legend(override.aes = list(linewidth=1)))+
-    theme_bw()+
-    scale_y_continuous(limits = c(0, 0.25), expand = c(0, 0))+
-    theme(panel.grid = element_blank(),
-          panel.border = element_blank(),
-          axis.ticks.x = element_blank(),
-          #axis.text.x = element_text(colour = 'grey50'),
-          axis.ticks.length.y = unit(0.3, units = 'cm'),
-          axis.line.y = element_line(colour = 'black'),
-          strip.background = element_blank(),
-          axis.title.x = element_blank(),
-          strip.text = element_blank())+
-    ylab('Allele Frequency')+
-    xlab('Population phase #') -> fig_af_phaseNo2
-  
-  ggplot(filter(dfplot, R2 > R2threshold), aes(npp, alf, 
-                     group = loci))+
-    # geom_point(size = 1, pch = 21, colour = 'grey50') +
-    geom_point(aes(colour = loci),size = 1, 
-                width = 0.01) +
-    #geom_line()+
-    # geom_vline(xintercept = 0.001)+
-    # scale_colour_manual(values = c(phaseColour,`52240654-8-G/A`= 'purple',
-    #                                `15086541-31-C/T`='blue', `15086052-24-G/A`= 'brown'),
-    #                     name = c('Population phase'),
-    #                     labels = c(names(phaseColour), 'model loci 1',
-    #                                'model loci 2', 'model loci 3'),
-    #                     guide = guide_legend(override.aes = list(
-    #                       size = c(2,2,2,1,1,1),
-    #                       linetype = c(rep("blank", 3), "solid", "solid", 'solid'),
-    #                       shape = c(rep(16, 3), NA, NA, NA))))+
-  scale_colour_manual(values = c(`52240654-8-G/A`= 'purple',
-                                 `15086541-31-C/T`='blue', `15086052-24-G/A`= 'brown'),
-                      name = c('Loci'),
-                      labels = c('model loci 1',
-                                 'model loci 2', 'model loci 3'))+
-    # scale_colour_manual(values = virid(5)[1:4],
-    #                     labels = c('unassigned', 'scaffold 18', 'scaffold 22',
-    #                                'scaffold 23'))+
     
-    geom_smooth(method = 'lm', se = F, aes(colour = loci), 
-                alpha = 0.5, size = 1)+
-    theme_bw()+
-    #facet_wrap(~loci, scale = 'free')+
-    scale_x_log10()+
-    scale_y_continuous(limits = c(0, 0.25), expand = c(0, 0))+
-    theme(panel.grid = element_blank(),
-          #legend.position = 'none',
-          panel.border = element_blank(),
-          axis.ticks.x = element_blank(),
-          #axis.text.x = element_text(colour = 'grey50'),
-          axis.ticks.length.y = unit(0.3, units = 'cm'),
-          axis.line.y = element_line(colour = 'black'),
-          axis.line.x = element_line(colour = 'black'),
-          strip.background = element_blank(),
-          # axis.title.x = element_blank(),
-          strip.text = element_blank()
-    )+
-    #scale_y_continuous(limits = c(0, 1), expand = c(0, 0))+
-    xlab(expression('NPP '[log-scale]))+
-    ylab('Allele Frequency') -> fig_af_npp2
-
-  # save -----------
-  fig_realAF2 <- grid.arrange(fig_af_npp2, 
-                             fig_af_phaseNo2 +
-                               theme(legend.position = 'none'), ncol =1)
-  
-  #ggsave('./figures/fig7_alf_change_real_simpler.png',fig_realAF2,
-  #       units = 'cm', height = 14, width = 12, dpi = 300)
-  
-  ## additional histogram of counts ------
+  # FIG histogram of counts ------
   dfslopes.raw$i[dfslopes.raw$i == 21 & dfslopes.raw$species==
                    'P. hermannsburgensis'] %>% table
   df2 <- dfslopes.raw$i[dfslopes.raw$slope > outlierSlopes]
@@ -861,52 +715,6 @@ ggplot(simAlf, aes(species, meandiff, fill = type)) +
                          'pvalue < 0.05',
                          'pvalue < 0.05 and slope > 0.021')) %>% 
     filter(name == 'pvalue < 0.05')
-  
-  histdata <- as.data.frame(table(dfslopes.raw2$i, dfslopes.raw2$species)) %>% 
-    mutate(type = ifelse(Var1 == 21, 'Real', 'Sim')) %>% 
-    rename(Freq1 = Freq) %>% 
-    left_join(df2) %>% 
-    pivot_longer(cols = c(Freq1, Freq)) %>% 
-    mutate(name = ifelse(name == 'Freq1', 
-                         'pvalue < 0.05',
-                         'pvalue < 0.05 and slope > 0.021')) %>% 
-    filter(name == 'pvalue < 0.05')
-  
-  table(histdata$name)
-  
-  histdata_REALnpp$npp <- 'real npp'
-  histdata$npp <- 'random npp'
-  as.numeric(as.character(histdata$Var1))[1:10] %% 0.2 
-  bind_rows(histdata, histdata_REALnpp) %>%
-    mutate(sim = as.numeric(as.character(Var1))*100,
-           div5 = sim %% 3,
-           subset = ifelse((div5 == 0),TRUE, FALSE),
-           npp = factor(npp, levels = c('real npp', 'random npp'))) %>% 
-    filter(subset) %>%
-    ggplot(aes(x = value, fill = type, colour = type))+ 
-    geom_histogram() + 
-    facet_grid(npp~Var2, scales = 'free_x'#, strip.position = 'bottom'
-               )+
-    scale_fill_manual(values = c('coral2', 'grey70'),
-                      name = 'Data')+
-    scale_colour_manual(values = c('coral2', 'black'),
-                      name = 'Data')+
-    theme_bw()+
-    theme(strip.background = element_blank(),
-        #  strip.placement = 'outside',
-        strip.text.x = element_text(face = 'italic'),
-          legend.position = c(0.9,0.85), 
-        plot.margin = margin(10,10,10,10),
-        legend.key.size = unit(0.5, units = 'cm'),
-        strip.text.y = element_text(face = 'bold', size = 10),
-          legend.background = element_rect(colour = 'grey'),
-          panel.grid = element_blank())+
-    xlab('number of loci (250 simulation subsets)') ->fig_hist
-  fig_hist
-  
-  #ggsave('./figures/fig5_loci_count_hist.png',fig_hist,
-  #       units = 'cm', height = 10, width = 13, dpi = 300)
-
   
   # Real npp Hist -------------
   
@@ -962,7 +770,8 @@ qnorm(0.95, mean = m, sd = s)
 pnorm(x, mean = m, sd = s)
 (x-m)/s
 
-## loci position -----------
+# APPENDIX table 
+## table loci position -----------
 candidates <- dfplot %>% 
   dplyr::select(loci, slope, mus_genome, mus_position,
                 pse_genome, Pse_position, scaffold, position) %>%
@@ -1031,346 +840,3 @@ dfscaff$Corrected <- round(p.adjust(dfscaff$Proportion, method = 'fdr'),2)
 #  flextable::save_as_docx(fxtbScaff,
  #                         path = './figures/scaffold_candidate_loci.docx')
 
-candidates %>% filter(scaffold %in% 16:18) %>% 
-  arrange(scaffold, Pse_position)
-
-
-### PLOT -----
-dfplot %>% 
-  filter(scaffold %in% c(16:17, 24,1, 4)) %>%
-  ggplot(aes(phaseNo, alf, colour = position, group = loci)) +
-  #geom_smooth(method = 'lm', colour = 'grey50', se = T) +
-  geom_line(size = 0.5, alpha = 0.5)+
-  #geom_hline(yintercept = c(0,1), colour = 'grey', lty = 3)+
-  # geom_boxplot(aes(group = phaseNo, fill = phase), 
-  #              colour = 'grey50',
-  #              alpha = 0.5, width = 0.1, size = 0.4)+#
-  facet_grid(~scaffold)+
-  geom_point(size = 2, alpha = 0.5, aes(group = phaseNo))+
-  # facet_wrap(~direction, ncol = 1, scale = 'free')+
-  # guides(alpha='none',
-  #        colour = guide_legend(override.aes = list(linewidth=1)))+
-  scale_colour_gradient2(low = 'orange', mid = 'yellow', high = 'hotpink')+
-  theme_bw()+
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0))+
-  theme(panel.grid = element_blank(),
-        panel.border = element_blank(),
-        axis.ticks.x = element_blank(),
-        #axis.text.x = element_text(colour = 'grey50'),
-        axis.ticks.length.y = unit(0.3, units = 'cm'),
-        axis.line.y = element_line(colour = 'black'),
-        strip.background = element_blank(),
-     #   strip.text = element_blank(),
-        axis.title.x = element_blank())+
-  ylab('Allele Frequency')+
-  xlab('Population phase #')
-
-# alf cor --------
-candidates %>% filter(scaffold %in% 17) %>% 
-       arrange(scaffold, Pse_position) %>% 
-       select(loci, position)# %>% dist
-
-
-dfplot %>% 
-  filter(scaffold %in% 16:17, 
-         position %in% c(60213862, 47918793)) %>% 
-  mutate(loci.n = ifelse(position == 60213862, 'loci2', 'loci1')) %>% 
-  dplyr::select(loci.n, alf, phase, phaseNo, species) %>% 
-  pivot_wider(names_from = loci.n, values_from = alf) %>% 
-#  lm(loci1 ~ loci2, data = .) %>% summary
-  ggplot(aes(loci1, loci2)) +
-  geom_smooth(method = 'lm', colour = 'grey50', se = T) +
-  #geom_line(size = 0.5, alpha = 0.5)+
-  geom_point(size = 2, alpha = 0.5)+
-  theme_bw()+
-#  scale_y_continuous(limits = c(0, 1), expand = c(0, 0))+
-  theme(panel.grid = element_blank(),
-        panel.border = element_blank(),
-        axis.ticks.x = element_blank(),
-        #axis.text.x = element_text(colour = 'grey50'),
-        axis.ticks.length.y = unit(0.3, units = 'cm'),
-        axis.line.y = element_line(colour = 'black'),
-        strip.background = element_blank(),
-        #   strip.text = element_blank(),
-        axis.title.x = element_blank())+
-  ylab('Allele Frequency')+
-  xlab('Population phase #')
-
-
-
-# Standardise alf change --------------
-dfplotL1 <- dfplot %>% filter(phaseNo == 'L1') %>% 
-  dplyr::select(alf, loci) %>% 
-  rename(alfstart = alf)
-
-dfplot %>% 
-  left_join(dfplotL1) %>% 
-  mutate(alf_standard = alf - alfstart) %>%
-  filter(scaffold %in% 16) %>% 
-ggplot(aes(phaseNo, alf_standard, colour = phase, group = loci)) +
-  #geom_smooth(method = 'lm', colour = 'grey50', se = T) +
-  geom_line(size = 0.5, alpha = 0.5)+
-  #geom_hline(yintercept = c(0,1), colour = 'grey', lty = 3)+
-  # geom_boxplot(aes(group = phaseNo, fill = phase), 
-  #              colour = 'grey50',
-  #              alpha = 0.5, width = 0.1, size = 0.4)+#
-  geom_point(size = 1, alpha = 0.5, aes(group = phaseNo))+
-  # facet_wrap(~direction, ncol = 1, scale = 'free')+
-  scale_colour_manual(values = phaseColour,#rep('grey',3),
-                      # labels = c('low to increase',
-                      #            'increase to decrease',
-                      #            'decrease to low'),
-                      name = 'Phase')+
-  guides(alpha='none',
-         colour = guide_legend(override.aes = list(linewidth=1)))+
-  theme_bw()+
-  facet_wrap(~pse_genome, ncol = 1)+
-  #scale_y_continuous(expand = c(0, 0))+
-  theme(panel.grid = element_blank(),
-        panel.border = element_blank(),
-        axis.ticks.x = element_blank(),
-        #axis.text.x = element_text(colour = 'grey50'),
-        axis.ticks.length.y = unit(0.3, units = 'cm'),
-        axis.line.y = element_line(colour = 'black'),
-        strip.background = element_blank(),
-        axis.title.x = element_blank())+
-  ylab('Allele Frequency')+
-  xlab('Population phase #') -> fig_af_phaseNo;fig_af_phaseNo
-
-# % change ---------
-npp <- read.csv('./output/dataframes/npp_means.csv')
-phmodel$realL1 %>% 
-  mutate(slope = abs(slope)) %>% 
-  arrange(desc(slope)) %>% 
-  filter(slope > 0.019) %>% 
-  summarise(slope = median(slope))
-
-(0.049*log(173)+  0.09525377)-
-(0.049*log(15)+  0.09525377)
-
-# START AGAIN FIG 7 ------
-sppdfslopes.raw <- filter(dfslopes.raw, species == 'P. hermannsburgensis')
-q75 <- tapply(sppdfslopes.raw$slope, sppdfslopes.raw$i,
-              function(x) quantile(x, probs = 0.75))
-
-q75[-length(q75)] %>% summary
-q75[length(q75)]
-
-outlierSlopes <- mean(q75[-length(q75)]) #quantile(q75[-length(q75)], probs = 0.75)
-outlierSlopes
-### subset ------
-## data  ------------
-
-locmeta_ph <- ph@other$loc.metrics[,c(1,28,5,6,9,10, 29)]
-names(locmeta_ph) <- c('AlleleID', 'uid', 'mus_genome', 'mus_position',
-                       'Pse_genome', 'Pse_position', 'rdepth')  
-locmeta_ph %>% head
-locmeta <- locmeta_ph %>% 
-  mutate(scaffold = sub('HiC_scaffold_', '', Pse_genome),
-         scaffold = ifelse(scaffold == '', 0, scaffold),
-         scaffold = as.numeric(scaffold)) %>% 
-  group_by(scaffold) %>% 
-  mutate(position = Pse_position - min(Pse_position))
-
-negslopes <- phmodel$real %>%
-  mutate(abslope = abs(slope),
-         direction = ifelse(slope < 0, 'negative slope', 'positive slope')) %>%
-  filter(abslope > outlierSlopes, pvalue < 0.05) %>% 
-  left_join(locmeta) %>% 
-  mutate(Pse_genome = factor(Pse_genome),
-         mus_genome = factor(mus_genome),
-         i = as.character(i)) %>% 
-  rename(pse_genome = Pse_genome)
-
-dfplot <- phmodel$alfreal %>%
- # filter(phaseNo != 'L1') %>% 
-  left_join(negslopes) %>% 
-  filter(uid %in% negslopes$uid) %>% 
-  filter(phase != 'decrease2') %>%   
-  mutate(alf = ifelse(direction == 'negative slope', alf1, alf2),
-         phase = factor(phase, levels = c('low',
-                                          'increase',
-                                          'decrease'))) %>%
-  filter(phase != 'decrease2') %>% 
-  # filter(R2 > 0.75) %>% 
-  arrange(pse_genome) %>% 
-  mutate(noloci = 1:nrow(.))
-## n loci ------
-dfplot$loci %>% unique %>% length
-## Af phase ------
-phaseColour <- phaseCol
-names(phaseColour) <- c('low','increase','decrease')
-
-ggplot(dfplot, aes(phaseNo, alf, colour = phase, group = loci)) +
-  #geom_smooth(method = 'lm', colour = 'grey50', se = T) +
-  geom_line(size = 0.5, alpha = 0.5)+
-  #geom_hline(yintercept = c(0,1), colour = 'grey', lty = 3)+
-  # geom_boxplot(aes(group = phaseNo, fill = phase), 
-  #              colour = 'grey50',
-  #              alpha = 0.5, width = 0.1, size = 0.4)+#
-  geom_point(size = 1, alpha = 0.5, aes(group = phaseNo))+
-  # facet_wrap(~direction, ncol = 1, scale = 'free')+
-  scale_colour_manual(values = phaseColour,#rep('grey',3),
-                      # labels = c('low to increase', 
-                      #            'increase to decrease',
-                      #            'decrease to low'),
-                      name = 'Phase')+
-  guides(alpha='none',
-         colour = guide_legend(override.aes = list(linewidth=1)))+
-  theme_bw()+
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0))+
-  theme(panel.grid = element_blank(),
-        panel.border = element_blank(),
-        axis.ticks.x = element_blank(),
-        #axis.text.x = element_text(colour = 'grey50'),
-        axis.ticks.length.y = unit(0.3, units = 'cm'),
-        axis.line.y = element_line(colour = 'black'),
-        strip.background = element_blank(),
-        axis.title.x = element_blank(),
-        strip.text = element_blank())+
-  ylab('Allele Frequency')+
-  xlab('Population phase #') -> fig_af_phaseNo;fig_af_phaseNo
-
-## lm npp --------------
-
-ggplot(dfplot, aes(npp, alf, 
-                   group = loci))+
-  # geom_point(size = 1, pch = 21, colour = 'grey50') +
-  geom_jitter(aes(colour = phase),size = 0.5, 
-              width = 0.01) +
-  #geom_line()+
-  # geom_vline(xintercept = 0.001)+
-  scale_colour_manual(values = c(phaseColour, Models = 'grey'),
-                      name = c('Population phase'),
-                      labels = c('Low', 'Increase', 'Decrease', 'Models'),
-                      guide = guide_legend(override.aes = list(
-                        size = c(2,2,2,1),
-                        linetype = c(rep("blank", 3), "solid"),
-                        shape = c(rep(16, 3), NA))))+
-  # scale_colour_manual(values = virid(5)[1:4],
-  #                     labels = c('unassigned', 'scaffold 18', 'scaffold 22',
-  #                                'scaffold 23'))+
-  
-  geom_smooth(method = 'lm', se = F, aes(colour = 'Models'), 
-              alpha = 0.5, size = 0.5)+
-  theme_bw()+
-  #facet_wrap(~loci, scale = 'free')+
-  scale_x_log10()+
-  #scale_y_continuous(limits = c(0, 1), expand = c(0, 0))+
-  theme(panel.grid = element_blank(),
-        #legend.position = 'none',
-        panel.border = element_blank(),
-        axis.ticks.x = element_blank(),
-        #axis.text.x = element_text(colour = 'grey50'),
-        axis.ticks.length.y = unit(0.3, units = 'cm'),
-        axis.line.y = element_line(colour = 'black'),
-        axis.line.x = element_line(colour = 'black'),
-        strip.background = element_blank(),
-        # axis.title.x = element_blank(),
-        strip.text = element_blank()
-  )+
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0))+
-  xlab(expression('Net primary productivity '[log-scale]))+
-  ylab('Allele Frequency') -> fig_af_npp;fig_af_npp
-
-## save FIG ------------
-fig_realAF <- grid.arrange(fig_af_npp, 
-                           fig_af_phaseNo +
-                             theme(legend.position = 'none'), ncol =1)
-
-ggsave('./figures/fig6_alf_change_real.png',fig_realAF,
-       units = 'cm', height = 14, width = 12, dpi = 300)
-
-
-## simplified -----
-R2threshold <- 0.78
-dfplot %>% 
-  filter(R2 > R2threshold) %>% select(loci) %>% table
-lociID <- dfplot$loci[which(dfplot$alf < 0.5 & dfplot$alf > 0.25 & dfplot$phaseNo == 'L1')]
-
-dfplot %>% 
-  filter(R2 > R2threshold) %>% 
-  ggplot(aes(phaseNo, alf, colour = phase, group = loci)) +
-  #geom_smooth(method = 'lm', colour = 'grey50', se = T) +
-  geom_line(size = 1, alpha = 0.95)+
-  #geom_hline(yintercept = c(0,1), colour = 'grey', lty = 3)+
-  # geom_boxplot(aes(group = phaseNo, fill = phase), 
-  #              colour = 'grey50',
-  #              alpha = 0.5, width = 0.1, size = 0.4)+#
-  #  geom_point(size = 2, alpha = 0.5, aes(group = phaseNo))+
-  # facet_wrap(~direction, ncol = 1, scale = 'free')+
-  scale_colour_manual(values = unname(phaseColour)[c(2,3,1)],#rep('grey',3),
-                      # labels = c('low to increase', 
-                      #            'increase to decrease',
-                      #            'decrease to low'),
-                      name = 'Phase')+
-  guides(alpha='none',
-         colour = guide_legend(override.aes = list(linewidth=1)))+
-  theme_bw()+
-  scale_y_continuous(limits = c(0, 0.25), expand = c(0, 0))+
-  theme(panel.grid = element_blank(),
-        panel.border = element_blank(),
-        axis.ticks.x = element_blank(),
-        #axis.text.x = element_text(colour = 'grey50'),
-        axis.ticks.length.y = unit(0.3, units = 'cm'),
-        axis.line.y = element_line(colour = 'black'),
-        strip.background = element_blank(),
-        axis.title.x = element_blank(),
-        strip.text = element_blank())+
-  ylab('Allele Frequency')+
-  xlab('Population phase #') -> fig_af_phaseNo2
-
-ggplot(filter(dfplot, R2 > R2threshold), aes(npp, alf, 
-                                             group = loci))+
-  # geom_point(size = 1, pch = 21, colour = 'grey50') +
-  geom_point(aes(colour = loci),size = 1, 
-             width = 0.01) +
-  #geom_line()+
-  # geom_vline(xintercept = 0.001)+
-  # scale_colour_manual(values = c(phaseColour,`52240654-8-G/A`= 'purple',
-  #                                `15086541-31-C/T`='blue', `15086052-24-G/A`= 'brown'),
-  #                     name = c('Population phase'),
-  #                     labels = c(names(phaseColour), 'model loci 1',
-  #                                'model loci 2', 'model loci 3'),
-  #                     guide = guide_legend(override.aes = list(
-  #                       size = c(2,2,2,1,1,1),
-  #                       linetype = c(rep("blank", 3), "solid", "solid", 'solid'),
-  #                       shape = c(rep(16, 3), NA, NA, NA))))+
-scale_colour_manual(values = c(`52240654-8-G/A`= 'purple',
-                               `15086541-31-C/T`='blue', `15086052-24-G/A`= 'brown'),
-                    name = c('Loci'),
-                    labels = c('model loci 1',
-                               'model loci 2', 'model loci 3'))+
-  # scale_colour_manual(values = virid(5)[1:4],
-  #                     labels = c('unassigned', 'scaffold 18', 'scaffold 22',
-  #                                'scaffold 23'))+
-  
-  geom_smooth(method = 'lm', se = F, aes(colour = loci), 
-              alpha = 0.5, size = 1)+
-  theme_bw()+
-  #facet_wrap(~loci, scale = 'free')+
-  scale_x_log10()+
-  scale_y_continuous(limits = c(0, 0.25), expand = c(0, 0))+
-  theme(panel.grid = element_blank(),
-        #legend.position = 'none',
-        panel.border = element_blank(),
-        axis.ticks.x = element_blank(),
-        #axis.text.x = element_text(colour = 'grey50'),
-        axis.ticks.length.y = unit(0.3, units = 'cm'),
-        axis.line.y = element_line(colour = 'black'),
-        axis.line.x = element_line(colour = 'black'),
-        strip.background = element_blank(),
-        # axis.title.x = element_blank(),
-        strip.text = element_blank()
-  )+
-  #scale_y_continuous(limits = c(0, 1), expand = c(0, 0))+
-  xlab(expression('NPP '[log-scale]))+
-  ylab('Allele Frequency') -> fig_af_npp2
-
-# save -----------
-fig_realAF2 <- grid.arrange(fig_af_npp2, 
-                            fig_af_phaseNo2 +
-                              theme(legend.position = 'none'), ncol =1)
-
-#ggsave('./figures/fig7_alf_change_real_simpler.png',fig_realAF2,
-#       units = 'cm', height = 14, width = 12, dpi = 300)
