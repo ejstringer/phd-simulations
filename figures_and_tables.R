@@ -15,14 +15,11 @@ syfst <- readRDS('./output/sy_vis_fst.rds') # sy = S. youngsoni
 phalf <- readRDS('./output/ph_vis_alf.rds')
 syalf <- readRDS('./output/sy_vis_alf.rds')
 
-
-phmodelRandom <- readRDS('./output/ph_vis_random.rds')
-symodelRandom <- readRDS('./output/sy_vis_random.rds')
-
 phmodel <- readRDS('./output/ph_vis_slopes.rds')
 symodel <- readRDS('./output/sy_vis_slopes.rds')
 
 ph <- readRDS('./output/pherm_filtered_genotypes_phases.rds')
+
 phinit <- read.csv('./output/dataframes/initialise_conditions.csv') %>% 
   rename(Nmax = N, N = nInd) %>% 
   mutate(phase = phaseNo, year = gen, species = 'ph')
@@ -692,20 +689,6 @@ simAlf <- bind_rows(phalf$nsim,syalf$nsim) %>%
     
   
   ## slopes ------------------
-  dfslopes.raw2 <- bind_rows(phmodelRandom$real, phmodelRandom$sim) %>% 
-    bind_rows(symodelRandom[[1]]) %>%
-    bind_rows(symodelRandom[[2]]) %>% 
-    filter(pvalue < 0.05,
-           # grepl('01', i) | i == '51'
-           #R2 > 0.8
-    ) %>% 
-    mutate(direction = ifelse(slope < 0, 'negative slope', 'positive slope'),
-           dslope = slope,
-           slope = abs(slope),
-           sim_i = round(i),
-           species = ifelse(is.na(species), 'S. youngsoni',
-                            'P. hermannsburgensis'))
-  
   histdata_REALnpp <- as.data.frame(table(dfslopes.raw$i, dfslopes.raw$species)) %>% 
   mutate(type = ifelse(Var1 == 21, 'Real', 'Sim')) %>% 
     rename(Freq1 = Freq) %>% 
@@ -721,12 +704,11 @@ simAlf <- bind_rows(phalf$nsim,syalf$nsim) %>%
   histdata_REALnpp %>%
     mutate(sim = as.numeric(as.character(Var1))*100,
            div5 = sim %% 3,
-           subset = ifelse((div5 == 0),TRUE, FALSE),
-           npp = factor(npp, levels = c('real npp', 'random npp'))) %>% 
+           subset = ifelse((div5 == 0),TRUE, FALSE)) %>% 
     filter(subset) %>%
     ggplot(aes(x = value, fill = type, colour = type))+ 
     geom_histogram() + 
-    facet_grid(npp~Var2, scales = 'free_x'#, strip.position = 'bottom'
+    facet_grid(~Var2, scales = 'free_x'#, strip.position = 'bottom'
     )+
     scale_fill_manual(values = c('coral2', 'grey70'),
                       labels = c('Empir.', 'Sim.'),
